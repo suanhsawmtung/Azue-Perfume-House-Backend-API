@@ -11,6 +11,7 @@ export const env = {
     process.env.GOOGLE_CLIENT_SECRET || "google-client-secret",
   serverUrl: process.env.SERVER_URL || "http://localhost:8080",
   webUrl: process.env.WEB_URL || "http://localhost:5173",
+  redisUrl: process.env.REDIS_URL || "redis://localhost:6379",
   databaseUrl: process.env.DATABASE_URL || "",
   jwt: {
     accessTokenSecret: process.env.ACCESS_TOKEN_SECRET_KEY || "access_secret",
