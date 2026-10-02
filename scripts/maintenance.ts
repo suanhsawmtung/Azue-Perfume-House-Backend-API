@@ -1,12 +1,14 @@
-import { prisma } from "../src/lib/prisma";
+import redisClient, { connectRedis } from "../src/config/redis";
 import { createCache, removeCache } from "../src/utils/cache";
 
 async function setMaintenanceMode(mode: "on" | "off") {
   try {
+    await connectRedis();
+
     if (mode === "on") {
       await createCache(".maintenance");
     } else {
-      removeCache(".maintenance");
+      await removeCache(".maintenance");
     }
 
     console.log(`✅ Maintenance mode: ${mode.toUpperCase()}`);
@@ -14,7 +16,9 @@ async function setMaintenanceMode(mode: "on" | "off") {
     console.error("❌ Error updating maintenance mode:", error);
     process.exit(1);
   } finally {
-    await prisma.$disconnect();
+    if (redisClient.isOpen) {
+      await redisClient.quit();
+    }
   }
 }
 

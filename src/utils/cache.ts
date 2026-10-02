@@ -1,34 +1,30 @@
-import fs from "fs";
-import path from "path";
-import { ensureDir } from "./file";
+import redisClient, { connectRedis } from "../config/redis";
 
-const cacheDir = path.join(process.cwd(), "cache");
+const ensureRedis = async () => {
+  if (!redisClient.isOpen) {
+    await connectRedis();
+  }
+};
 
 export const createCache = async (
   cacheName: string,
   content: string = Date.now().toString()
 ) => {
-  await ensureDir(cacheDir);
-  const filePath = path.join(cacheDir, cacheName);
-  fs.writeFileSync(filePath, content);
+  await ensureRedis();
+  await redisClient.set(cacheName, content);
 };
 
-export const removeCache = (cacheName: string) => {
-  const filePath = path.join(cacheDir, cacheName);
-  if (fs.existsSync(filePath)) {
-    fs.unlinkSync(filePath);
-  }
+export const removeCache = async (cacheName: string) => {
+  await ensureRedis();
+  await redisClient.del(cacheName);
 };
 
-export const hasCache = (cacheName: string): boolean => {
-  const filePath = path.join(cacheDir, cacheName);
-  return fs.existsSync(filePath);
+export const hasCache = async (cacheName: string): Promise<boolean> => {
+  await ensureRedis();
+  return (await redisClient.exists(cacheName)) === 1;
 };
 
-export const readCache = (cacheName: string): string | null => {
-  const filePath = path.join(cacheDir, cacheName);
-  if (fs.existsSync(filePath)) {
-    return fs.readFileSync(filePath, "utf-8");
-  }
-  return null;
+export const readCache = async (cacheName: string): Promise<string | null> => {
+  await ensureRedis();
+  return redisClient.get(cacheName);
 };
