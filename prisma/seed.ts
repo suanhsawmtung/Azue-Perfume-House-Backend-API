@@ -17,6 +17,7 @@ import { prisma } from "../src/lib/prisma";
 import { recalculateUserPoints } from "../src/services/user/user.helpers";
 import { createSlug, ensureUniqueSlug } from "../src/utils/common";
 
+import redisClient, { connectRedis } from "../src/config/redis";
 import { getFilePath, removeFolder } from "../src/utils/file";
 import { brands, categories, posts, products } from "./data";
 
@@ -35,6 +36,14 @@ export const users = faker.helpers.multiple(createRandomUser, {
 
 export async function main() {
   console.log("Starting seed...");
+
+  await connectRedis();
+  if (!redisClient.isReady) {
+    throw new Error(
+      "Redis is unavailable. Start Redis or set REDIS_URL before running the seed.",
+    );
+  }
+  await redisClient.flushDb();
 
   console.log("Cleaning up database...");
   await prisma.review.deleteMany({});
@@ -731,12 +740,19 @@ export async function main() {
   console.log("Seed completed successfully!");
 }
 
+const disconnectResources = async () => {
+  await prisma.$disconnect();
+  if (redisClient.isOpen) {
+    await redisClient.quit();
+  }
+};
+
 main()
   .then(async () => {
-    await prisma.$disconnect();
+    await disconnectResources();
   })
   .catch(async (e) => {
     console.error("Seed error:", e);
-    await prisma.$disconnect();
+    await disconnectResources();
     process.exit(1);
   });

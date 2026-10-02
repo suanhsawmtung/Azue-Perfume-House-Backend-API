@@ -37,7 +37,7 @@ const refreshTokenAndNext = async (
       maxAge: 1000 * 60 * 60 * 24 * 30,
     });
 
-    req.userId = data.userData.id;
+    req.userId = +data.userData.id;
     return next();
   } catch (error) {
     return next(error);
@@ -86,7 +86,7 @@ export const isAuthenticated = async (
           return next(error);
         }
 
-        req.userId = decoded.id;
+        req.userId = +decoded.id;
 
         return next();
       } catch (err: any) {

@@ -25,3 +25,17 @@ export interface IVerifyResetOtpData {
   email: string;
   token: string | null;
 }
+
+export interface IRefreshTokenData {
+  accessToken: string;
+  refreshToken: string;
+  userData: AuthSession;
+}
+
+export type AuthSession = {
+  id: string;
+  email: string;
+  refreshToken: string;
+  previousRefreshToken: string;
+  rotateTokenAt: string;
+};
