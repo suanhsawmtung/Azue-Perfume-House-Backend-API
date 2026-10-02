@@ -100,6 +100,7 @@ The project may be expanded in the future with additional e-commerce and busines
 - Node.js
 - pnpm
 - PostgreSQL
+- Redis
 
 ### Installation
 
@@ -134,12 +135,18 @@ REFRESH_TOKEN_SECRET_KEY=
 
 CORS_ORIGINS=frontend_url
 
+REDIS_URL=your_redis_url
+
 DATABASE_URL=database_connection_url
 ```
 
 ### Database Setup
 
 Make sure PostgreSQL is running and your DATABASE_URL is configured in .env.
+
+### Redis Setup
+
+Make sure Redis is running and your REDIS_URL is configured in .env.
 
 #### Run Prisma migrations:
 
