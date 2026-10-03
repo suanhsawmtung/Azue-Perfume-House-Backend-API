@@ -1,7 +1,6 @@
 import { errorCode } from "../../config/error-code";
 import { hash } from "../../lib/hash";
 import { prisma } from "../../lib/prisma";
-import { generateCode } from "../../lib/unique-key-generator";
 import { ServiceResponseT } from "../../types/common";
 import {
   CreateUserParams,
@@ -109,7 +108,6 @@ export class AdminUserService implements IAdminUserService {
     const username = await generateUsername(firstName, lastName);
     const defaultPassword = "12345678";
     const hashedPassword = await hash(defaultPassword);
-    const refreshToken = generateCode(16);
 
     const user = await createUserRecord({
       firstName: firstName ?? null,
@@ -118,7 +116,6 @@ export class AdminUserService implements IAdminUserService {
       phone: phone ?? null,
       email: trimmedEmail,
       password: hashedPassword,
-      refreshToken,
       emailVerifiedAt: new Date(),
       role,
       status,

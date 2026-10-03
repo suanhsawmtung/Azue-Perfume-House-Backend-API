@@ -24,7 +24,6 @@ import {
   findUserByEmail,
   findUserByEmailWithSensitive,
   findUserById,
-  findUserByIdWithSensitive,
   generateUsername,
   updateUserRecord,
 } from "../user/user.helpers";
@@ -279,16 +278,20 @@ export class AuthService implements IAuthService {
       throw userNotExistsError();
     }
 
-    const user = await findUserByIdWithSensitive(decoded.id);
-    if (!user) {
-      throw userNotExistsError();
-    }
+    const session = (await redisClient.hGetAll(
+      `session:${decoded.id}:${decoded.sessionId}`,
+    )) as AuthSession;
 
-    if (user.refreshToken !== refreshToken || user.id !== decoded.id) {
+    if (
+      !session ||
+      session.id !== String(decoded.id) ||
+      session.email !== decoded.email ||
+      session.refreshToken !== refreshToken
+    ) {
       throw unauthenticatedError();
     }
 
-    await redisClient.del(`session:${user.id}:${decoded.sessionId}`);
+    await redisClient.del(`session:${decoded.id}:${decoded.sessionId}`);
 
     return {
       data: null,
