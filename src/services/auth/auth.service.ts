@@ -3,11 +3,15 @@ import "dotenv/config";
 import jwt from "jsonwebtoken";
 import moment from "moment";
 import { env } from "../../config/env";
+import redisClient from "../../config/redis";
+import { UserDto } from "../../dtos/user.dto";
 import { compareHashed, hash } from "../../lib/hash";
-import { generateJWT } from "../../lib/unique-key-generator";
+import { generateJWT, generateToken } from "../../lib/unique-key-generator";
 import {
+  AuthSession,
   IForgotPasswordData,
   ILoginData,
+  IRefreshTokenData,
   IRegistrationData,
   IResendOtpData,
   IVerifyResetOtpData,
@@ -20,7 +24,6 @@ import {
   findUserByEmail,
   findUserByEmailWithSensitive,
   findUserById,
-  findUserByIdWithSensitive,
   generateUsername,
   updateUserRecord,
 } from "../user/user.helpers";
@@ -142,6 +145,9 @@ export class AuthService implements IAuthService {
     const isExpired = moment().diff(otpRow.expiresAt, "minutes") > 2;
     if (isExpired) throw expiredOtpError();
 
+    const sessionId = generateToken();
+    const sessionKey = `session:${user.id}:${sessionId}`;
+
     const accessToken = generateJWT({
       payload: { id: user.id },
       secret: env.jwt.accessTokenSecret,
@@ -149,13 +155,24 @@ export class AuthService implements IAuthService {
     });
 
     const refreshToken = generateJWT({
-      payload: { id: user.id, email: user.email },
+      payload: { id: user.id, email: user.email, sessionId },
       secret: env.jwt.refreshTokenSecret,
       options: { expiresIn: "30d" },
     });
 
+    await redisClient
+      .multi()
+      .hSet(sessionKey, {
+        id: user.id,
+        email: user.email,
+        refreshToken,
+        previousRefreshToken: "",
+        rotateTokenAt: "",
+      })
+      .expire(sessionKey, 30 * 24 * 60 * 60)
+      .exec();
+
     const updatedUser = await updateUserRecord(user.id, {
-      refreshToken,
       emailVerifiedAt: new Date(),
     });
 
@@ -191,6 +208,9 @@ export class AuthService implements IAuthService {
     const isMatched = await compareHashed(password, user.password || "");
     if (!isMatched) throw invalidPasswordError();
 
+    const sessionId = generateToken();
+    const sessionKey = `session:${user.id}:${sessionId}`;
+
     const accessToken = generateJWT({
       payload: { id: user.id },
       secret: env.jwt.accessTokenSecret,
@@ -198,20 +218,28 @@ export class AuthService implements IAuthService {
     });
 
     const refreshToken = generateJWT({
-      payload: { id: user.id, email: user.email },
+      payload: { id: user.id, email: user.email, sessionId },
       secret: env.jwt.refreshTokenSecret,
       options: { expiresIn: "30d" },
     });
 
-    const updatedUser = await updateUserRecord(user.id, {
-      refreshToken,
-    });
+    await redisClient
+      .multi()
+      .hSet(sessionKey, {
+        id: user.id,
+        email: user.email,
+        refreshToken,
+        previousRefreshToken: "",
+        rotateTokenAt: "",
+      })
+      .expire(sessionKey, 30 * 24 * 60 * 60)
+      .exec();
 
     return {
       data: {
         accessToken,
         refreshToken,
-        userData: updatedUser,
+        userData: UserDto.toSafeUser(user),
       },
       success: true,
       message: "User logged in successfully",
@@ -233,6 +261,7 @@ export class AuthService implements IAuthService {
       decoded = jwt.verify(refreshToken, env.jwt.refreshTokenSecret) as {
         id: number;
         email: string;
+        sessionId: string;
       };
     } catch {
       throw unauthenticatedError();
@@ -249,20 +278,20 @@ export class AuthService implements IAuthService {
       throw userNotExistsError();
     }
 
-    const user = await findUserByIdWithSensitive(decoded.id);
-    if (!user) {
-      throw userNotExistsError();
-    }
+    const session = (await redisClient.hGetAll(
+      `session:${decoded.id}:${decoded.sessionId}`,
+    )) as AuthSession;
 
-    if (user.refreshToken !== refreshToken || user.id !== decoded.id) {
+    if (
+      !session ||
+      session.id !== String(decoded.id) ||
+      session.email !== decoded.email ||
+      session.refreshToken !== refreshToken
+    ) {
       throw unauthenticatedError();
     }
 
-    await updateUserRecord(user.id, {
-      refreshToken: null,
-      previousRefreshToken: null,
-      rotateTokenAt: null,
-    });
+    await redisClient.del(`session:${decoded.id}:${decoded.sessionId}`);
 
     return {
       data: null,
@@ -441,12 +470,13 @@ export class AuthService implements IAuthService {
     refreshToken,
   }: {
     refreshToken: string;
-  }): Promise<ServiceResponseT<ILoginData>> {
+  }): Promise<ServiceResponseT<IRefreshTokenData>> {
     let decoded;
     try {
       decoded = jwt.verify(refreshToken, env.jwt.refreshTokenSecret) as {
         id: number;
         email: string;
+        sessionId: string;
       };
     } catch (err: any) {
       if (err.name === "TokenExpiredError") {
@@ -461,7 +491,9 @@ export class AuthService implements IAuthService {
       throw userNotExistsError();
     }
 
-    const user = await findUserByIdWithSensitive(decoded.id);
+    const user = (await redisClient.hGetAll(
+      `session:${decoded.id}:${decoded.sessionId}`,
+    )) as AuthSession;
 
     if (!user) {
       throw userNotExistsError();
@@ -477,7 +509,7 @@ export class AuthService implements IAuthService {
       user.previousRefreshToken === refreshToken;
     const withinRotationGracePeriod =
       user.rotateTokenAt &&
-      Date.now() <= user.rotateTokenAt.getTime() + 30 * 1000;
+      Date.now() <= new Date(user.rotateTokenAt).getTime() + 30 * 1000;
 
     if (
       (!refreshTokenMatches && !previousRefreshTokenMatches) ||
@@ -498,17 +530,23 @@ export class AuthService implements IAuthService {
       options: { expiresIn: "30d" },
     });
 
-    const updatedUser = await updateUserRecord(user.id, {
-      refreshToken: newRefreshToken,
-      previousRefreshToken: refreshToken,
-      rotateTokenAt: new Date(),
-    });
+    const sessionKey = `session:${user.id}:${decoded.sessionId}`;
+
+    await redisClient
+      .multi()
+      .hSet(sessionKey, {
+        refreshToken: newRefreshToken,
+        previousRefreshToken: refreshToken,
+        rotateTokenAt: new Date().toISOString(),
+      })
+      .expire(sessionKey, 30 * 24 * 60 * 60)
+      .exec();
 
     return {
       data: {
         accessToken: newAccessToken,
         refreshToken: newRefreshToken,
-        userData: (await findUserById(updatedUser.id)) as SafeUserT,
+        userData: user as unknown as AuthSession,
       },
       success: true,
       message: "Tokens refreshed successfully.",
@@ -516,6 +554,8 @@ export class AuthService implements IAuthService {
   }
 
   async googleLogin(user: SafeUserT): Promise<ServiceResponseT<ILoginData>> {
+    const sessionId = generateToken();
+    const sessionKey = `session:${user.id}:${sessionId}`;
     const accessToken = generateJWT({
       payload: { id: user.id },
       secret: env.jwt.accessTokenSecret,
@@ -523,21 +563,32 @@ export class AuthService implements IAuthService {
     });
 
     const refreshToken = generateJWT({
-      payload: { id: user.id, email: user.email },
+      payload: { id: user.id, email: user.email, sessionId },
       secret: env.jwt.refreshTokenSecret,
       options: { expiresIn: "30d" },
     });
 
+    await redisClient
+      .multi()
+      .hSet(sessionKey, {
+        id: user.id,
+        email: user.email,
+        refreshToken,
+        previousRefreshToken: "",
+        rotateTokenAt: "",
+      })
+      .expire(sessionKey, 30 * 24 * 60 * 60)
+      .exec();
+
     const updatedUser = await updateUserRecord(user.id, {
       provider: AuthProvider.GOOGLE,
-      refreshToken,
     });
 
     return {
       data: {
         accessToken,
         refreshToken,
-        userData: (await findUserById(updatedUser.id)) as SafeUserT,
+        userData: updatedUser,
       },
       success: true,
       message: "Successfully login with Google",

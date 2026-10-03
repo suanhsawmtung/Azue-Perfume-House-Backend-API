@@ -2,14 +2,14 @@ import { NextFunction, Response } from "express";
 import jwt from "jsonwebtoken";
 import { env } from "../config/env";
 import { errorCode } from "../config/error-code";
-import { findUserByIdWithSensitive } from "../services/user/user.helpers";
+import redisClient from "../config/redis";
 import { CustomRequest } from "../types/common";
 import { createError } from "../utils/common";
 
 export const ensureUnauthenticated = async (
   req: CustomRequest,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const { refreshToken } = req.cookies || {};
 
@@ -18,13 +18,16 @@ export const ensureUnauthenticated = async (
   }
 
   try {
-    const decoded = jwt.verify(
-      refreshToken,
-      env.jwt.refreshTokenSecret
-    ) as { id: number; email: string };
+    const decoded = jwt.verify(refreshToken, env.jwt.refreshTokenSecret) as {
+      id: number;
+      email: string;
+      sessionId: string;
+    };
 
     if (!isNaN(decoded.id)) {
-      const user = await findUserByIdWithSensitive(decoded.id);
+      const user = await redisClient.hGetAll(
+        `session:${decoded.id}:${decoded.sessionId}`,
+      );
 
       if (
         user &&

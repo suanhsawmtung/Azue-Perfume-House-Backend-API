@@ -1,5 +1,6 @@
+import { User } from "@prisma/client";
 import { getGradeInfo } from "../services/user/user.helpers";
-import { MyProfileT, UserProfileQueryData } from "../types/user";
+import { MyProfileT, SafeUserT, UserProfileQueryData } from "../types/user";
 
 export class UserDto {
   static toMyProfile(
@@ -69,6 +70,25 @@ export class UserDto {
         productName: review.product.name,
       })),
       rewards,
+    };
+  }
+
+  static toSafeUser(user: User): SafeUserT {
+    return {
+      id: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      emailVerifiedAt: user.emailVerifiedAt,
+      createdAt: user.createdAt,
+      username: user.username,
+      phone: user.phone,
+      image: user.image,
+      points: user.points,
+      role: user.role,
+      status: user.status,
+      provider: user.provider,
+      updatedAt: user.updatedAt,
     };
   }
 }

@@ -13,7 +13,7 @@ export const isMaintenanceMode = async (
   // const ip: any = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
   // if (whiteLists.includes(ip)) return next();
 
-  if (hasCache(".maintenance")) {
+  if (await hasCache(".maintenance")) {
     const error = createError({
       message:
         "This app is currently under maintenance. Please try again later.",

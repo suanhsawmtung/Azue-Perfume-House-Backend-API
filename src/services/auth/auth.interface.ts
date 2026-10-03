@@ -2,9 +2,10 @@ import { OtpType } from "@prisma/client";
 import {
   IForgotPasswordData,
   ILoginData,
+  IRefreshTokenData,
   IRegistrationData,
   IResendOtpData,
-  IVerifyResetOtpData
+  IVerifyResetOtpData,
 } from "../../types/auth";
 import { ServiceResponseT } from "../../types/common";
 import { SafeUserT } from "../../types/user";
@@ -28,9 +29,7 @@ export interface IAuthService {
     password: string;
   }): Promise<ServiceResponseT<ILoginData>>;
 
-  logout(params: {
-    refreshToken: string;
-  }): Promise<ServiceResponseT<null>>;
+  logout(params: { refreshToken: string }): Promise<ServiceResponseT<null>>;
 
   forgotPassword(params: {
     email: string;
@@ -55,11 +54,11 @@ export interface IAuthService {
 
   refreshTokens(params: {
     refreshToken: string;
-  }): Promise<ServiceResponseT<ILoginData>>;
+  }): Promise<ServiceResponseT<IRefreshTokenData>>;
 
-  checkAuth(userId?: number | undefined): Promise<ServiceResponseT<
-        SafeUserT | null
-    >>;
+  checkAuth(
+    userId?: number | undefined,
+  ): Promise<ServiceResponseT<SafeUserT | null>>;
 
   googleLogin(user: SafeUserT): Promise<ServiceResponseT<ILoginData>>;
 }

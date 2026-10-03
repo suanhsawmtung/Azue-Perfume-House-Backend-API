@@ -4,7 +4,7 @@ import { hasCache } from "../utils/cache";
 import { runCommand } from "../utils/run-command";
 
 export const maintenanceJob = cron.schedule("0 5 * * *", async () => {
-  const isMaintenanceMode = hasCache(".maintenance");
+  const isMaintenanceMode = await hasCache(".maintenance");
 
   if (isMaintenanceMode) {
     console.log("Running pnpm dev:up at", new Date().toISOString());

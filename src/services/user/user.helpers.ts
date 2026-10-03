@@ -18,10 +18,7 @@ import { createError, createSlug } from "../../utils/common";
 
 export const userOmit = {
   password: true,
-  refreshToken: true,
-  previousRefreshToken: true,
   googleId: true,
-  rotateTokenAt: true,
   deletedAt: true,
 } as const;
 

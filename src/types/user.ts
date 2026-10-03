@@ -14,10 +14,7 @@ import {
 export type SafeUserT = Omit<
   User,
   | "password"
-  | "refreshToken"
-  | "previousRefreshToken"
   | "googleId"
-  | "rotateTokenAt"
   | "deletedAt"
 >;
 
