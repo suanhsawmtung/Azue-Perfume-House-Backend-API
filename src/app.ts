@@ -39,6 +39,8 @@ const corsOptions = {
 
 export const app: Express = express();
 
+app.set("trust proxy", 1);
+
 app
   .use(morgan("dev"))
   .use(express.urlencoded({ extended: true }))
