@@ -491,9 +491,13 @@ export class AuthService implements IAuthService {
       throw userNotExistsError();
     }
 
-    const user = (await redisClient.hGetAll(
-      `session:${decoded.id}:${decoded.sessionId}`,
-    )) as AuthSession;
+    if (!decoded.sessionId) {
+      throw invalidRefreshTokenError();
+    }
+
+    const sessionKey = `session:${decoded.id}:${decoded.sessionId}`;
+
+    const user = (await redisClient.hGetAll(sessionKey)) as AuthSession;
 
     if (!user) {
       throw userNotExistsError();
@@ -525,12 +529,10 @@ export class AuthService implements IAuthService {
     });
 
     const newRefreshToken = generateJWT({
-      payload: { id: user.id, email: user.email },
+      payload: { id: user.id, email: user.email, sessionId: decoded.sessionId },
       secret: env.jwt.refreshTokenSecret,
       options: { expiresIn: "30d" },
     });
-
-    const sessionKey = `session:${user.id}:${decoded.sessionId}`;
 
     await redisClient
       .multi()
