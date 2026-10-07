@@ -6,6 +6,15 @@ import { SafeUserT } from "../../types/user";
 
 const authService = new AuthService();
 
+const getRequestDebugInfo = (req: Request) => ({
+  method: req.method,
+  url: req.originalUrl || req.url,
+  ip: req.ip,
+  userAgent: req.get("user-agent"),
+  hasAccessToken: Boolean(req.cookies?.accessToken),
+  hasRefreshToken: Boolean(req.cookies?.refreshToken),
+});
+
 export const register = async (
   req: Request,
   res: Response,
@@ -106,7 +115,24 @@ export const logout = async (
 ) => {
   const refreshToken = req.cookies?.refreshToken;
 
-  await authService.logout({ refreshToken });
+  console.log("[auth][logout] request received", {
+    ...getRequestDebugInfo(req),
+    hasRefreshToken: Boolean(refreshToken),
+  });
+
+  try {
+    await authService.logout({ refreshToken });
+    console.log("[auth][logout] completed", getRequestDebugInfo(req));
+  } catch (error: any) {
+    console.warn("[auth][logout] failed", {
+      ...getRequestDebugInfo(req),
+      errorName: error?.name,
+      errorMessage: error?.message,
+      errorCode: error?.code,
+      status: error?.status,
+    });
+    return next(error);
+  }
 
   return res
     .clearCookie("accessToken", {

@@ -50,6 +50,10 @@ import { IAuthService } from "./auth.interface";
 export class AuthService implements IAuthService {
   private emailService = new EmailService();
 
+  private tokenFingerprint(token?: string) {
+    return token ? `present(length:${token.length})` : "missing";
+  }
+
   async register({
     email,
     password,
@@ -252,6 +256,7 @@ export class AuthService implements IAuthService {
     refreshToken: string;
   }): Promise<ServiceResponseT<null>> {
     if (!refreshToken) {
+      console.warn("[auth][service][logout] failed: refresh token is missing");
       throw unauthenticatedError();
     }
 
@@ -263,7 +268,12 @@ export class AuthService implements IAuthService {
         email: string;
         sessionId: string;
       };
-    } catch {
+    } catch (error: any) {
+      console.warn("[auth][service][logout] failed: refresh token JWT is invalid", {
+        tokenFingerprint: this.tokenFingerprint(refreshToken),
+        errorName: error?.name,
+        errorMessage: error?.message,
+      });
       throw unauthenticatedError();
     }
 
@@ -275,6 +285,10 @@ export class AuthService implements IAuthService {
       };
 
     if (isNaN(decoded.id)) {
+      console.warn("[auth][service][logout] failed: decoded user ID is invalid", {
+        decodedId: decoded.id,
+        sessionId: decoded.sessionId,
+      });
       throw userNotExistsError();
     }
 
@@ -288,10 +302,26 @@ export class AuthService implements IAuthService {
       session.email !== decoded.email ||
       session.refreshToken !== refreshToken
     ) {
+      console.warn("[auth][service][logout] failed: Redis session does not match refresh token", {
+        userId: decoded.id,
+        email: decoded.email,
+        sessionId: decoded.sessionId,
+        sessionExists: Boolean(session && Object.keys(session).length),
+        sessionUserId: session?.id,
+        sessionEmailMatches: session?.email === decoded.email,
+        sessionRefreshTokenMatches: session?.refreshToken === refreshToken,
+        tokenFingerprint: this.tokenFingerprint(refreshToken),
+      });
       throw unauthenticatedError();
     }
 
     await redisClient.del(`session:${decoded.id}:${decoded.sessionId}`);
+
+    console.log("[auth][service][logout] session deleted", {
+      userId: decoded.id,
+      email: decoded.email,
+      sessionId: decoded.sessionId,
+    });
 
     return {
       data: null,
@@ -479,6 +509,11 @@ export class AuthService implements IAuthService {
         sessionId: string;
       };
     } catch (err: any) {
+      console.warn("[auth][service][refresh] refresh token JWT verification failed", {
+        tokenFingerprint: this.tokenFingerprint(refreshToken),
+        errorName: err?.name,
+        errorMessage: err?.message,
+      });
       if (err.name === "TokenExpiredError") {
         throw unauthenticatedError();
       } else {
@@ -488,10 +523,18 @@ export class AuthService implements IAuthService {
     }
 
     if (isNaN(decoded.id)) {
+      console.warn("[auth][service][refresh] failed: decoded user ID is invalid", {
+        decodedId: decoded.id,
+        sessionId: decoded.sessionId,
+      });
       throw userNotExistsError();
     }
 
     if (!decoded.sessionId) {
+      console.warn("[auth][service][refresh] failed: session ID is missing", {
+        userId: decoded.id,
+        email: decoded.email,
+      });
       throw invalidRefreshTokenError();
     }
 
@@ -500,10 +543,20 @@ export class AuthService implements IAuthService {
     const user = (await redisClient.hGetAll(sessionKey)) as AuthSession;
 
     if (!user) {
+      console.warn("[auth][service][refresh] failed: Redis session not found", {
+        userId: decoded.id,
+        sessionId: decoded.sessionId,
+      });
       throw userNotExistsError();
     }
 
     if (user.email !== decoded.email) {
+      console.warn("[auth][service][refresh] failed: session email mismatch", {
+        userId: decoded.id,
+        sessionId: decoded.sessionId,
+        decodedEmail: decoded.email,
+        sessionEmail: user.email,
+      });
       throw unauthenticatedError();
     }
 
@@ -519,6 +572,14 @@ export class AuthService implements IAuthService {
       (!refreshTokenMatches && !previousRefreshTokenMatches) ||
       (previousRefreshTokenMatches && !withinRotationGracePeriod)
     ) {
+      console.warn("[auth][service][refresh] failed: refresh token does not match active session", {
+        userId: decoded.id,
+        sessionId: decoded.sessionId,
+        tokenFingerprint: this.tokenFingerprint(refreshToken),
+        refreshTokenMatches,
+        previousRefreshTokenMatches,
+        withinRotationGracePeriod: Boolean(withinRotationGracePeriod),
+      });
       throw retryAndLogoutError();
     }
 
