@@ -6,6 +6,20 @@ import { SafeUserT } from "../../types/user";
 
 const authService = new AuthService();
 
+const isAppleDevice = (req: Request) =>
+  String(req.headers["is-apple-device"]).toLowerCase() === "true";
+
+const authResponseData = (
+  req: Request,
+  userData: SafeUserT,
+  accessToken: string,
+  refreshToken: string,
+) => ({
+  success: true,
+  data: userData,
+  ...(isAppleDevice(req) ? { accessToken, refreshToken } : {}),
+});
+
 const getRequestDebugInfo = (req: Request) => ({
   method: req.method,
   url: req.originalUrl || req.url,
@@ -43,6 +57,13 @@ export const verifyUserEmail = async (
     data: { accessToken, refreshToken, userData },
   } = await authService.verifyUserEmail({ email, otp, token });
 
+  if (isAppleDevice(req)) {
+    return res.status(200).json({
+      message: "User is successfully verified.",
+      ...authResponseData(req, userData, accessToken, refreshToken),
+    });
+  }
+
   return res
     .cookie("accessToken", accessToken, {
       httpOnly: true,
@@ -63,11 +84,7 @@ export const verifyUserEmail = async (
       maxAge: 1000 * 60 * 60 * 24 * 30,
     })
     .status(200)
-    .json({
-      message: "User is successfully verified.",
-      data: userData,
-      success: true,
-    });
+    .json({ message: "User is successfully verified.", data: userData, success: true });
 };
 
 export const login = async (
@@ -81,31 +98,34 @@ export const login = async (
     data: { accessToken, refreshToken, userData },
   } = await authService.login({ email, password });
 
+  if (isAppleDevice(req)) {
+    return res.status(200).json({
+      message: "Successfully login",
+      ...authResponseData(req, userData, accessToken, refreshToken),
+    });
+  }
+
   return res
     .cookie("accessToken", accessToken, {
       httpOnly: true,
-      secure: env.appEnv !== "production" && env.appEnv !== "staging",
+      secure: env.appEnv === "production" || env.appEnv === "staging",
       sameSite:
         env.appEnv === "production" || env.appEnv === "staging"
-          ? "lax"
+          ? "none"
           : "strict",
       maxAge: 1000 * 60 * 15,
     })
     .cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      secure: env.appEnv !== "production" && env.appEnv !== "staging",
+      secure: env.appEnv === "production" || env.appEnv === "staging",
       sameSite:
         env.appEnv === "production" || env.appEnv === "staging"
-          ? "lax"
+          ? "none"
           : "strict",
       maxAge: 1000 * 60 * 60 * 24 * 30,
     })
     .status(200)
-    .json({
-      success: true,
-      message: "Successfully login",
-      data: userData,
-    });
+    .json({ success: true, message: "Successfully login", data: userData });
 };
 
 export const logout = async (
@@ -113,7 +133,11 @@ export const logout = async (
   res: Response,
   next: NextFunction,
 ) => {
-  const refreshToken = req.cookies?.refreshToken;
+  const refreshToken = isAppleDevice(req)
+    ? ((req.headers["refresh-token"] || req.headers.refreshtoken) as
+        | string
+        | undefined)
+    : req.cookies?.refreshToken;
 
   console.log("[auth][logout] request received", {
     ...getRequestDebugInfo(req),

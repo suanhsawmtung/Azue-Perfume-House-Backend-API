@@ -8,6 +8,16 @@ import { createError } from "../utils/common";
 
 const authService = new AuthService();
 
+const isAppleDevice = (req: CustomRequest) =>
+  String(req.headers["is-apple-device"]).toLowerCase() === "true";
+
+const getBearerToken = (req: CustomRequest) => {
+  const authorization = req.headers.authorization;
+  return authorization?.startsWith("Bearer ")
+    ? authorization.slice("Bearer ".length)
+    : undefined;
+};
+
 const getRequestDebugInfo = (req: CustomRequest) => ({
   method: req.method,
   url: req.originalUrl || req.url,
@@ -29,22 +39,27 @@ const refreshTokenAndNext = async (
     });
     const { data } = await authService.refreshTokens({ refreshToken });
 
-    res.cookie("accessToken", data.accessToken, {
+    if (isAppleDevice(req)) {
+      res.setHeader("x-access-token", data.accessToken);
+      res.setHeader("x-refresh-token", data.refreshToken);
+    }
+
+    if (!isAppleDevice(req)) res.cookie("accessToken", data.accessToken, {
       httpOnly: true,
-      secure: env.appEnv !== "production" && env.appEnv !== "staging",
+      secure: env.appEnv === "production" || env.appEnv === "staging",
       sameSite:
         env.appEnv === "production" || env.appEnv === "staging"
-          ? "lax"
+          ? "none"
           : "strict",
       maxAge: 1000 * 60 * 15,
     });
 
-    res.cookie("refreshToken", data.refreshToken, {
+    if (!isAppleDevice(req)) res.cookie("refreshToken", data.refreshToken, {
       httpOnly: true,
-      secure: env.appEnv !== "production" && env.appEnv !== "staging",
+      secure: env.appEnv === "production" || env.appEnv === "staging",
       sameSite:
         env.appEnv === "production" || env.appEnv === "staging"
-          ? "lax"
+          ? "none"
           : "strict",
       maxAge: 1000 * 60 * 60 * 24 * 30,
     });
@@ -79,12 +94,21 @@ export const isAuthenticated = async (
     //   console.log(accessTokenMobile);
     // }
 
-    const { accessToken, refreshToken } = req.cookies || {};
+    const appleDevice = isAppleDevice(req);
+    const accessToken = appleDevice
+      ? getBearerToken(req)
+      : req.cookies?.accessToken;
+    const refreshToken = appleDevice
+      ? ((req.headers["refresh-token"] || req.headers.refreshtoken) as
+          | string
+          | undefined)
+      : req.cookies?.refreshToken;
 
     console.log("[auth][middleware] request checked", {
       ...getRequestDebugInfo(req),
       hasAccessToken: Boolean(accessToken),
       hasRefreshToken: Boolean(refreshToken),
+      isAppleDevice: appleDevice,
     });
 
     if (!refreshToken) {
