@@ -31,20 +31,20 @@ const refreshTokenAndNext = async (
 
     res.cookie("accessToken", data.accessToken, {
       httpOnly: true,
-      secure: env.appEnv === "production" || env.appEnv === "staging",
+      secure: env.appEnv !== "production" && env.appEnv !== "staging",
       sameSite:
         env.appEnv === "production" || env.appEnv === "staging"
-          ? "none"
+          ? "lax"
           : "strict",
       maxAge: 1000 * 60 * 15,
     });
 
     res.cookie("refreshToken", data.refreshToken, {
       httpOnly: true,
-      secure: env.appEnv === "production" || env.appEnv === "staging",
+      secure: env.appEnv !== "production" && env.appEnv !== "staging",
       sameSite:
         env.appEnv === "production" || env.appEnv === "staging"
-          ? "none"
+          ? "lax"
           : "strict",
       maxAge: 1000 * 60 * 60 * 24 * 30,
     });
@@ -102,9 +102,12 @@ export const isAuthenticated = async (
     }
 
     if (!accessToken) {
-      console.log("[auth][middleware] access token is missing; using refresh token", {
-        ...getRequestDebugInfo(req),
-      });
+      console.log(
+        "[auth][middleware] access token is missing; using refresh token",
+        {
+          ...getRequestDebugInfo(req),
+        },
+      );
       return await refreshTokenAndNext(req, res, next, refreshToken);
     } else {
       try {
@@ -132,10 +135,13 @@ export const isAuthenticated = async (
         return next();
       } catch (err: any) {
         if (err.name === "TokenExpiredError") {
-          console.log("[auth][middleware] access token expired; using refresh token", {
-            ...getRequestDebugInfo(req),
-            tokenError: err.name,
-          });
+          console.log(
+            "[auth][middleware] access token expired; using refresh token",
+            {
+              ...getRequestDebugInfo(req),
+              tokenError: err.name,
+            },
+          );
           return await refreshTokenAndNext(req, res, next, refreshToken);
         } else {
           console.warn("[auth][middleware] rejected: access token is invalid", {

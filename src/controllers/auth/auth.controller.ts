@@ -84,19 +84,19 @@ export const login = async (
   return res
     .cookie("accessToken", accessToken, {
       httpOnly: true,
-      secure: env.appEnv === "production" || env.appEnv === "staging",
+      secure: env.appEnv !== "production" && env.appEnv !== "staging",
       sameSite:
         env.appEnv === "production" || env.appEnv === "staging"
-          ? "none"
+          ? "lax"
           : "strict",
       maxAge: 1000 * 60 * 15,
     })
     .cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      secure: env.appEnv === "production" || env.appEnv === "staging",
+      secure: env.appEnv !== "production" && env.appEnv !== "staging",
       sameSite:
         env.appEnv === "production" || env.appEnv === "staging"
-          ? "none"
+          ? "lax"
           : "strict",
       maxAge: 1000 * 60 * 60 * 24 * 30,
     })
