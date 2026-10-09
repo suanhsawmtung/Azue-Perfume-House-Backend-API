@@ -20,15 +20,6 @@ const authResponseData = (
   ...(isAppleDevice(req) ? { accessToken, refreshToken } : {}),
 });
 
-const getRequestDebugInfo = (req: Request) => ({
-  method: req.method,
-  url: req.originalUrl || req.url,
-  ip: req.ip,
-  userAgent: req.get("user-agent"),
-  hasAccessToken: Boolean(req.cookies?.accessToken),
-  hasRefreshToken: Boolean(req.cookies?.refreshToken),
-});
-
 export const register = async (
   req: Request,
   res: Response,
@@ -139,24 +130,7 @@ export const logout = async (
         | undefined)
     : req.cookies?.refreshToken;
 
-  console.log("[auth][logout] request received", {
-    ...getRequestDebugInfo(req),
-    hasRefreshToken: Boolean(refreshToken),
-  });
-
-  try {
-    await authService.logout({ refreshToken });
-    console.log("[auth][logout] completed", getRequestDebugInfo(req));
-  } catch (error: any) {
-    console.warn("[auth][logout] failed", {
-      ...getRequestDebugInfo(req),
-      errorName: error?.name,
-      errorMessage: error?.message,
-      errorCode: error?.code,
-      status: error?.status,
-    });
-    return next(error);
-  }
+  await authService.logout({ refreshToken });
 
   return res
     .clearCookie("accessToken", {

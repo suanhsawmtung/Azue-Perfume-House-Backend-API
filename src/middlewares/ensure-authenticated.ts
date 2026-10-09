@@ -18,14 +18,6 @@ const getBearerToken = (req: CustomRequest) => {
     : undefined;
 };
 
-const getRequestDebugInfo = (req: CustomRequest) => ({
-  method: req.method,
-  url: req.originalUrl || req.url,
-  ip: req.ip,
-  userAgent: req.get("user-agent"),
-  userId: req.userId,
-});
-
 const refreshTokenAndNext = async (
   req: CustomRequest,
   res: Response,
@@ -33,10 +25,6 @@ const refreshTokenAndNext = async (
   refreshToken: string,
 ) => {
   try {
-    console.log("[auth][refresh] attempting token refresh", {
-      ...getRequestDebugInfo(req),
-      refreshTokenFingerprint: refreshToken.slice(-8),
-    });
     const { data } = await authService.refreshTokens({ refreshToken });
 
     if (isAppleDevice(req)) {
@@ -65,19 +53,8 @@ const refreshTokenAndNext = async (
     });
 
     req.userId = +data.userData.id;
-    console.log("[auth][refresh] succeeded", {
-      ...getRequestDebugInfo(req),
-      userId: req.userId,
-    });
     return next();
   } catch (error) {
-    console.warn("[auth][refresh] failed", {
-      ...getRequestDebugInfo(req),
-      errorName: (error as any)?.name,
-      errorMessage: (error as any)?.message,
-      errorCode: (error as any)?.code,
-      status: (error as any)?.status,
-    });
     return next(error);
   }
 };
@@ -88,12 +65,6 @@ export const isAuthenticated = async (
   next: NextFunction,
 ) => {
   try {
-    // const platform = req.headers["x-platform"];
-    // if (platform === "mobile") {
-    //   const accessTokenMobile = req.headers.authorization?.split(" ")[1];
-    //   console.log(accessTokenMobile);
-    // }
-
     const appleDevice = isAppleDevice(req);
     const accessToken = appleDevice
       ? getBearerToken(req)
@@ -104,18 +75,7 @@ export const isAuthenticated = async (
           | undefined)
       : req.cookies?.refreshToken;
 
-    console.log("[auth][middleware] request checked", {
-      ...getRequestDebugInfo(req),
-      hasAccessToken: Boolean(accessToken),
-      hasRefreshToken: Boolean(refreshToken),
-      isAppleDevice: appleDevice,
-    });
-
     if (!refreshToken) {
-      console.warn("[auth][middleware] rejected: refresh token is missing", {
-        ...getRequestDebugInfo(req),
-        hasAccessToken: Boolean(accessToken),
-      });
       const error = createError({
         message: "You are not an authenticated user.",
         status: 401,
@@ -126,12 +86,6 @@ export const isAuthenticated = async (
     }
 
     if (!accessToken) {
-      console.log(
-        "[auth][middleware] access token is missing; using refresh token",
-        {
-          ...getRequestDebugInfo(req),
-        },
-      );
       return await refreshTokenAndNext(req, res, next, refreshToken);
     } else {
       try {
@@ -151,28 +105,11 @@ export const isAuthenticated = async (
 
         req.userId = +decoded.id;
 
-        console.log("[auth][middleware] access token accepted", {
-          ...getRequestDebugInfo(req),
-          userId: req.userId,
-        });
-
         return next();
       } catch (err: any) {
         if (err.name === "TokenExpiredError") {
-          console.log(
-            "[auth][middleware] access token expired; using refresh token",
-            {
-              ...getRequestDebugInfo(req),
-              tokenError: err.name,
-            },
-          );
           return await refreshTokenAndNext(req, res, next, refreshToken);
         } else {
-          console.warn("[auth][middleware] rejected: access token is invalid", {
-            ...getRequestDebugInfo(req),
-            tokenError: err?.name,
-            tokenMessage: err?.message,
-          });
           const error = createError({
             message: "Access Token is invalid.",
             status: 400,
