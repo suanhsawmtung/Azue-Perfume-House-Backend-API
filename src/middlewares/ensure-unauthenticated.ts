@@ -11,7 +11,13 @@ export const ensureUnauthenticated = async (
   res: Response,
   next: NextFunction,
 ) => {
-  const { refreshToken } = req.cookies || {};
+  const isAppleDevice =
+    String(req.headers["is-apple-device"]).toLowerCase() === "true";
+  const refreshToken = isAppleDevice
+    ? ((req.headers["refresh-token"] || req.headers.refreshtoken) as
+        | string
+        | undefined)
+    : req.cookies?.refreshToken;
 
   if (!refreshToken) {
     return next();

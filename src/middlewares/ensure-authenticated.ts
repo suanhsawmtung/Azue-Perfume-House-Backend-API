@@ -8,6 +8,16 @@ import { createError } from "../utils/common";
 
 const authService = new AuthService();
 
+const isAppleDevice = (req: CustomRequest) =>
+  String(req.headers["is-apple-device"]).toLowerCase() === "true";
+
+const getBearerToken = (req: CustomRequest) => {
+  const authorization = req.headers.authorization;
+  return authorization?.startsWith("Bearer ")
+    ? authorization.slice("Bearer ".length)
+    : undefined;
+};
+
 const refreshTokenAndNext = async (
   req: CustomRequest,
   res: Response,
@@ -17,7 +27,12 @@ const refreshTokenAndNext = async (
   try {
     const { data } = await authService.refreshTokens({ refreshToken });
 
-    res.cookie("accessToken", data.accessToken, {
+    if (isAppleDevice(req)) {
+      res.setHeader("x-access-token", data.accessToken);
+      res.setHeader("x-refresh-token", data.refreshToken);
+    }
+
+    if (!isAppleDevice(req)) res.cookie("accessToken", data.accessToken, {
       httpOnly: true,
       secure: env.appEnv === "production" || env.appEnv === "staging",
       sameSite:
@@ -27,7 +42,7 @@ const refreshTokenAndNext = async (
       maxAge: 1000 * 60 * 15,
     });
 
-    res.cookie("refreshToken", data.refreshToken, {
+    if (!isAppleDevice(req)) res.cookie("refreshToken", data.refreshToken, {
       httpOnly: true,
       secure: env.appEnv === "production" || env.appEnv === "staging",
       sameSite:
@@ -50,13 +65,15 @@ export const isAuthenticated = async (
   next: NextFunction,
 ) => {
   try {
-    // const platform = req.headers["x-platform"];
-    // if (platform === "mobile") {
-    //   const accessTokenMobile = req.headers.authorization?.split(" ")[1];
-    //   console.log(accessTokenMobile);
-    // }
-
-    const { accessToken, refreshToken } = req.cookies || {};
+    const appleDevice = isAppleDevice(req);
+    const accessToken = appleDevice
+      ? getBearerToken(req)
+      : req.cookies?.accessToken;
+    const refreshToken = appleDevice
+      ? ((req.headers["refresh-token"] || req.headers.refreshtoken) as
+          | string
+          | undefined)
+      : req.cookies?.refreshToken;
 
     if (!refreshToken) {
       const error = createError({

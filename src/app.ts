@@ -35,6 +35,7 @@ const corsOptions = {
     }
   },
   credentials: true,
+  exposedHeaders: ["x-access-token", "x-refresh-token"],
 };
 
 export const app: Express = express();
