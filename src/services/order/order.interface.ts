@@ -14,6 +14,9 @@ export interface IAdminOrderService {
   listOrders(
     params: ListAdminOrdersParams,
   ): Promise<ServiceResponseT<ListOrderResultT>>;
+  exportOrders(
+    params: ListAdminOrdersParams,
+  ): Promise<string>;
   getOrderDetail(code: string): Promise<ServiceResponseT<Order>>;
   createOrder(params: CreateOrderParams): Promise<ServiceResponseT<Order>>;
   updateOrder(
