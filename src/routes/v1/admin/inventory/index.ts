@@ -1,12 +1,23 @@
 import { Role } from "@prisma/client";
 import express, { Router } from "express";
-import { createInventory, listInventories } from "../../../../controllers/admin/inventory.controller";
+import {
+  createInventory,
+  exportInventories,
+  listInventories,
+} from "../../../../controllers/admin/inventory.controller";
 import { permit } from "../../../../middlewares/check-permissions";
 import { isAuthenticated } from "../../../../middlewares/ensure-authenticated";
 import { handleValidationError } from "../../../../middlewares/error-handler";
 import { createInventoryValidation, listInventoriesValidation } from "../../../../validations/inventory.validation";
 
 const router: Router = express.Router();
+
+router.get(
+  "/export",
+  isAuthenticated,
+  permit(true, Role.ADMIN),
+  exportInventories,
+);
 
 router.get(
   "/:type",

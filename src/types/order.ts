@@ -156,3 +156,18 @@ export type PlaceOrderParams = {
   userId: number | string;
   imageFilename: string;
 };
+
+export type OrderCsvRowT = {
+  order_code: string;
+  created_at: string;
+  customer_name: string;
+  customer_phone: string;
+  customer_email: string;
+  customer_address: string;
+  customer_notes: string;
+  order_status: string;
+  payment_status: string;
+  source: string;
+  total_price: string;
+  order_items: string;
+};
