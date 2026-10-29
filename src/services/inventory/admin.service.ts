@@ -1,9 +1,12 @@
 import { InventoryType } from "@prisma/client";
+import { stringify } from "csv-stringify/sync";
 import { errorCode } from "../../config/error-code";
+import { InventoryDto } from "../../dtos/inventory.dto";
 import { prisma } from "../../lib/prisma";
 import { ServiceResponseT } from "../../types/common";
 import {
   CreateInventoryParams,
+  ExportInventoriesParams,
   ListInventoriesParams,
   ListInventoryResultT,
   ListInventoryT,
@@ -71,6 +74,60 @@ export class AdminInventoryService implements IAdminInventoryService {
       },
       message: null,
     };
+  }
+
+  async exportInventories(params: ExportInventoriesParams): Promise<string> {
+    const { search, type } = parseInventoryQueryParams(params);
+    const where = buildInventoryWhereClause({ search, type });
+
+    const items = await prisma.inventory.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      include: {
+        productVariant: {
+          select: {
+            id: true,
+            sku: true,
+            size: true,
+            product: {
+              select: {
+                id: true,
+                name: true,
+                brand: {
+                  select: { name: true },
+                },
+              },
+            },
+          },
+        },
+        createdBy: {
+          select: {
+            username: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+      },
+    });
+
+    return stringify(items.map(InventoryDto.toInventoryCsvRow), {
+      header: true,
+      columns: [
+        "inventory_id",
+        "created_at",
+        "type",
+        "quantity",
+        "unit_cost",
+        "total_cost",
+        "variant_id",
+        "variant_name",
+        "sku",
+        "product_id",
+        "product_name",
+        "brand_name",
+        "created_by",
+      ],
+    });
   }
 
   async createInventory(

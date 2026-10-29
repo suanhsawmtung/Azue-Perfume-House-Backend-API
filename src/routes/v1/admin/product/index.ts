@@ -9,6 +9,7 @@ import {
   getProductVariant,
   listProducts,
   listProductVariants,
+  exportProducts,
   updateProduct,
   updateProductVariant,
 } from "../../../../controllers/admin/product.controller";
@@ -29,6 +30,13 @@ import {
 const router: Router = express.Router();
 
 router.get("/", isAuthenticated, permit(true, Role.ADMIN), listProducts);
+
+router.get(
+  "/export",
+  isAuthenticated,
+  permit(true, Role.ADMIN),
+  exportProducts,
+);
 
 router.post(
   "/",

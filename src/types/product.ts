@@ -34,6 +34,25 @@ export type AdminListProductResultT = {
   pageSize: number;
 };
 
+export type ProductCsvQueryDataT = Product & {
+  brand: Pick<Brand, "name">;
+  variants: Pick<
+    ProductVariant,
+    "size" | "sku" | "price" | "stock" | "isActive"
+  >[];
+};
+
+export type ProductCsvRowT = {
+  product_name: string;
+  brand_name: string;
+  variant_name: string;
+  sku: string;
+  price: string;
+  stock_quantity: string;
+  product_status: string;
+  variant_status: string;
+};
+
 export type ListProductT = ProductCardT;
 
 export type ListProductResultT = {

@@ -1,7 +1,12 @@
 import { InventoryType, Prisma } from "@prisma/client";
-import { ListInventoriesParams } from "../../types/inventory";
+import {
+  ExportInventoriesParams,
+  ListInventoriesParams,
+} from "../../types/inventory";
 
-export const parseInventoryQueryParams = (query: ListInventoriesParams) => {
+export const parseInventoryQueryParams = (
+  query: ListInventoriesParams | ExportInventoriesParams,
+) => {
   const pageSizeParam = Number(query.limit);
   const pageSize = Number.isNaN(pageSizeParam) || pageSizeParam <= 0 ? 10 : Math.min(pageSizeParam, 50);
 
