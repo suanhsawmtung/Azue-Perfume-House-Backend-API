@@ -16,6 +16,38 @@ import {
 } from "../../types/order";
 import { createError } from "../../utils/common";
 
+export const csvValue = (value: string | null | undefined): string => {
+  const normalizedValue = value ?? "";
+  return /^[\t\r\n ]*[=+\-@]/.test(normalizedValue)
+    ? `'${normalizedValue}`
+    : normalizedValue;
+};
+
+export const decimalValue = (value: unknown): string =>
+  value === null || value === undefined ? "" : String(value);
+
+export const orderItemsValue = (order: ListOrderT): string =>
+  (order.orderItems ?? [])
+    .map((item) => {
+      const variant = item.productVariant;
+      const product = variant?.product;
+      const brandName = product?.brand?.name;
+      const productName = product?.name;
+      const sku = variant?.sku;
+
+      return [
+        brandName && csvValue(brandName),
+        productName && csvValue(productName),
+        sku && `sku=${csvValue(sku)}`,
+        variant?.size !== undefined && `size=${variant.size}`,
+        `quantity=${item.quantity}`,
+        `unit_price=${decimalValue(item.price)}`,
+      ]
+        .filter(Boolean)
+        .join(" ");
+    })
+    .join("; ");
+
 // export const orderStatusTransitions: Record<OrderStatus, readonly OrderStatus[]> = {
 //   PENDING: ["ACCEPTED", "REJECTED"],
 //   ACCEPTED: ["DONE", "CANCELLED"],

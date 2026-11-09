@@ -15,6 +15,46 @@ export interface ListInventoriesParams {
   search?: string | undefined;
 }
 
+export type ExportInventoriesParams = Omit<ListInventoriesParams, "type"> & {
+  type?: string | undefined;
+};
+
+export type InventoryCsvQueryDataT = Inventory & {
+  productVariant: {
+    id: number;
+    sku: string;
+    size: number;
+    product: {
+      id: number;
+      name: string;
+      brand: {
+        name: string;
+      };
+    };
+  };
+  createdBy: {
+    username: string | null;
+    firstName: string | null;
+    lastName: string | null;
+  } | null;
+};
+
+export type InventoryCsvRowT = {
+  inventory_id: string;
+  created_at: string;
+  type: string;
+  quantity: string;
+  unit_cost: string;
+  total_cost: string;
+  variant_id: string;
+  variant_name: string;
+  sku: string;
+  product_id: string;
+  product_name: string;
+  brand_name: string;
+  created_by: string;
+};
+
 export interface ParseInventoryQueryParamsResult {
   pageSize: number;
   offset: number;

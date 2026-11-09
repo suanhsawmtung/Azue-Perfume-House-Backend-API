@@ -6,6 +6,24 @@ import { createError } from "../../utils/common";
 
 const adminInventoryService = new AdminInventoryService();
 
+export const exportInventories = async (
+  req: CustomRequest,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const csv = await adminInventoryService.exportInventories(req.query);
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader(
+      "Content-Disposition",
+      'attachment; filename="inventories.csv"',
+    );
+    return res.status(200).send(csv);
+  } catch (error: any) {
+    next(error);
+  }
+};
+
 export const listInventories = async (
   req: CustomRequest,
   res: Response,

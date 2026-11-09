@@ -1,5 +1,7 @@
 import { Prisma, Product, ProductVariant } from "@prisma/client";
+import { stringify } from "csv-stringify/sync";
 import { errorCode } from "../../config/error-code";
+import { ProductDto } from "../../dtos/product.dto";
 import { prisma } from "../../lib/prisma";
 import { ServiceResponseT } from "../../types/common";
 import {
@@ -90,6 +92,63 @@ export class AdminProductService implements IAdminProductService {
       },
       message: null,
     };
+  }
+
+  async exportProducts(params: ListProductsParams): Promise<string> {
+    const {
+      search,
+      brandSlug,
+      gender,
+      concentration,
+      isActive,
+      isLimited,
+    } = parseProductQueryParams(params);
+
+    const where = buildProductWhere({
+      search,
+      brandSlug,
+      gender,
+      concentration,
+      isActive,
+      isLimited,
+    });
+
+    const products = await prisma.product.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      include: {
+        brand: {
+          select: { name: true },
+        },
+        variants: {
+          where: { deletedAt: null },
+          orderBy: { size: "asc" },
+          select: {
+            size: true,
+            sku: true,
+            price: true,
+            stock: true,
+            isActive: true,
+          },
+        },
+      },
+    });
+
+    const rows = products.flatMap(ProductDto.toProductCsvRows);
+
+    return stringify(rows, {
+      header: true,
+      columns: [
+        "product_name",
+        "brand_name",
+        "variant_name",
+        "sku",
+        "price",
+        "stock_quantity",
+        "product_status",
+        "variant_status",
+      ],
+    });
   }
 
   async getProductDetail(

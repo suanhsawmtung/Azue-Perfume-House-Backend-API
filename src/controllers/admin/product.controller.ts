@@ -7,6 +7,24 @@ import { cleanupUploadedFiles } from "../../utils/file-cleanup";
 
 const adminProductService = new AdminProductService();
 
+export const exportProducts = async (
+  req: CustomRequest,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const csv = await adminProductService.exportProducts(req.query);
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader(
+      "Content-Disposition",
+      'attachment; filename="products.csv"',
+    );
+    return res.status(200).send(csv);
+  } catch (error: any) {
+    next(error);
+  }
+};
+
 export const listProducts = async (
   req: CustomRequest,
   res: Response,

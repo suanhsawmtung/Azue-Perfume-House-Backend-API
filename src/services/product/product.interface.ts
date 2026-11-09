@@ -15,6 +15,7 @@ import {
 
 export interface IAdminProductService {
   listProducts(params: ListProductsParams): Promise<ServiceResponseT<AdminListProductResultT>>;
+  exportProducts(params: ListProductsParams): Promise<string>;
   getProductDetail(slug: string): Promise<ServiceResponseT<AdminProductDetailT>>;
   createProduct(params: CreateProductParams): Promise<ServiceResponseT<Product>>;
   updateProduct(slug: string, params: UpdateProductNewParams): Promise<ServiceResponseT<Product>>;

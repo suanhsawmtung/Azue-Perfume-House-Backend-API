@@ -2,6 +2,7 @@ import { Role } from "@prisma/client";
 import express, { Router } from "express";
 import {
   createOrder,
+  exportOrders,
   getOrder,
   listOrders,
   updateOrder,
@@ -30,6 +31,8 @@ router.post(
   handleValidationError,
   createOrder,
 );
+
+router.get("/export", isAuthenticated, permit(true, Role.ADMIN), exportOrders);
 
 router.get("/:code", isAuthenticated, permit(true, Role.ADMIN), getOrder);
 
