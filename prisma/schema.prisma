@@ -79,7 +79,8 @@ model Inventory {
 
 model Image {
   id               Int             @id @default(autoincrement())
-  path             String          @db.VarChar(255)
+  path             String          @db.Text
+  publicId         String?
   isPrimary        Boolean         @default(false)
   order            Int             @default(0)
   productVariantId Int?
@@ -163,6 +164,7 @@ model Order {
   rejectedReason  String?            @db.VarChar(500)
   cancelledReason String?            @db.VarChar(500)
   image           String?
+  imagePublicId   String?
   createdAt       DateTime           @default(now())
   updatedAt       DateTime           @updatedAt
   deletedAt       DateTime?
@@ -264,21 +266,22 @@ model Category {
 }
 
 model Post {
-  id          Int        @id @default(autoincrement())
-  title       String     @db.VarChar(255)
-  slug        String     @unique @db.VarChar(255)
-  excerpt     String?    @db.VarChar(255)
-  content     String
-  image       String
-  authorId    Int
-  categoryId  Int
-  status      PostStatus @default(DRAFT)
-  publishedAt DateTime?
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-  deletedAt   DateTime?
-  author      User       @relation(fields: [authorId], references: [id])
-  category    Category   @relation(fields: [categoryId], references: [id])
+  id            Int        @id @default(autoincrement())
+  title         String     @db.VarChar(255)
+  slug          String     @unique @db.VarChar(255)
+  excerpt       String?    @db.VarChar(255)
+  content       String
+  image         String
+  imagePublicId String?
+  authorId      Int
+  categoryId    Int
+  status        PostStatus @default(DRAFT)
+  publishedAt   DateTime?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  deletedAt     DateTime?
+  author        User       @relation(fields: [authorId], references: [id])
+  category      Category   @relation(fields: [categoryId], references: [id])
 }
 
 model Brand {
@@ -312,6 +315,7 @@ model User {
   password        String?
   email           String    @unique @db.VarChar(255)
   image           String?
+  imagePublicId   String?
   emailVerifiedAt DateTime?
 
   points Int @default(0)

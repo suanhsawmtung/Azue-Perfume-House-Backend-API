@@ -16,6 +16,7 @@ export type SafeUserT = Omit<
   | "password"
   | "googleId"
   | "deletedAt"
+  | "imagePublicId"
 >;
 
 export type ListUsersParams = {

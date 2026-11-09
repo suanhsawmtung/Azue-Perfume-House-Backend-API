@@ -2,6 +2,7 @@ export const env = {
   port: process.env.PORT || 8080,
   appEnv: process.env.APP_ENV || "development",
   emailProvider: process.env.EMAIL_PROVIDER || "log",
+  storageProvider: process.env.STORAGE_PROVIDER || "local",
   resendApiKey: process.env.RESEND_API_KEY || "resend-api-key",
   resendFromEmail:
     process.env.RESEND_FROM_EMAIL || "Azue Perfume <onboarding@resend.dev>",

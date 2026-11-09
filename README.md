@@ -130,6 +130,8 @@ GOOGLE_CLIENT_SECRET=
 EMAIL_PROVIDER=log
 RESEND_API_KEY=
 
+STORAGE_PROVIDER=local
+
 ACCESS_TOKEN_SECRET_KEY=
 REFRESH_TOKEN_SECRET_KEY=
 
@@ -138,6 +140,10 @@ CORS_ORIGINS=frontend_url
 REDIS_URL=your_redis_url
 
 DATABASE_URL=database_connection_url
+
+CLOUDINARY_CLOUD_NAME=
+CLOUDINARY_API_KEY=
+CLOUDINARY_API_SECRET=
 ```
 
 ### Database Setup
@@ -186,9 +192,23 @@ pnpm dev
 | `EMAIL_PROVIDER`           | Email provider used by the application      | `log`                                                              |
 | `RESEND_API_KEY`           | API key for Resend email delivery           | `your-resend-api-key`                                              |
 | `RESEND_FROM_EMAIL`        | Sender email address for outgoing emails    | `noreply@example.com`                                              |
+| `STORAGE_PROVIDER`         | File storage provider                       | `local` or `cloudinary`                                            |
 | `ACCESS_TOKEN_SECRET_KEY`  | Secret key used to sign access tokens       | `your-access-token-secret`                                         |
 | `REFRESH_TOKEN_SECRET_KEY` | Secret key used to sign refresh tokens      | `your-refresh-token-secret`                                        |
 | `CORS_ORIGINS`             | Allowed frontend origin(s) for CORS         | `http://localhost:5173`                                            |
 | `DATABASE_URL`             | PostgreSQL connection string used by Prisma | `postgresql://username:password@localhost:5432/azue?schema=public` |
+| `CLOUDINARY_CLOUD_NAME`    | Cloudinary cloud name                        | `your-cloud-name`                                                   |
+| `CLOUDINARY_API_KEY`       | Server-side Cloudinary API key               | `your-cloudinary-api-key`                                          |
+| `CLOUDINARY_API_SECRET`    | Server-side Cloudinary API secret            | `your-cloudinary-api-secret`                                       |
 
 > **Note:** These are development values. Update them according to your deployment environment.
+
+For DigitalOcean or PM2 deployments, provide the three Cloudinary variables through
+the server's environment or secret manager. Keep `CLOUDINARY_API_SECRET` server-side
+and never include any Cloudinary credential in frontend build variables.
+
+File storage uses `local` by default. Local uploads are written under
+`uploads/images/{post,product,user,order}` and are served through the existing static
+paths. Production can use `STORAGE_PROVIDER=cloudinary` with the three Cloudinary
+credentials above. Provider selection is server-side and Cloudinary credentials are
+never exposed to the frontend.
