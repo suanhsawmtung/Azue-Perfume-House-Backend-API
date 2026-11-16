@@ -1,3 +1,5 @@
+import "dotenv/config";
+
 export const env = {
   port: process.env.PORT || 8080,
   appEnv: process.env.APP_ENV || "development",
@@ -18,5 +20,12 @@ export const env = {
     accessTokenSecret: process.env.ACCESS_TOKEN_SECRET_KEY || "access_secret",
     refreshTokenSecret:
       process.env.REFRESH_TOKEN_SECRET_KEY || "refresh_secret",
+  },
+  r2: {
+    accountId: process.env.R2_ACCOUNT_ID || "",
+    accessKeyId: process.env.R2_ACCESS_KEY_ID || "",
+    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY || "",
+    bucketName: process.env.R2_BUCKET_NAME || "",
+    publicUrl: process.env.R2_PUBLIC_URL?.trim().replace(/\/+$/, "") || "",
   },
 };

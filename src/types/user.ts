@@ -61,6 +61,7 @@ export type UpdateMeParams = {
   lastName?: string | undefined;
   phone?: string | undefined;
   imageFilename?: string | undefined;
+  imagePublicId?: string | null | undefined;
 };
 
 export type ChangePasswordParams = {

@@ -155,12 +155,16 @@ export const createProductVariant = async (
 ) => {
   try {
     const files = (req as any).files as Express.Multer.File[] | undefined;
-    const imageFilenames =
-      files && Array.isArray(files) ? files.map((file) => file.filename) : [];
+    const storageFiles = (req as any).storageFiles || [];
+    const imageFilenames = storageFiles.length > 0
+      ? storageFiles.map((file: any) => file.value)
+      : files && Array.isArray(files) ? files.map((file) => file.filename) : [];
+    const imagePublicIds = storageFiles.map((file: any) => file.publicId);
 
     const result = await adminProductService.createVariant({
       ...req.body,
       ...(imageFilenames.length > 0 && { imageFilenames }),
+      ...(imageFilenames.length > 0 && { imagePublicIds }),
     });
 
     return res.status(201).json(result);
@@ -187,12 +191,16 @@ export const updateProductVariant = async (
     }
 
     const files = (req as any).files as Express.Multer.File[] | undefined;
-    const imageFilenames =
-      files && Array.isArray(files) ? files.map((file) => file.filename) : [];
+    const storageFiles = (req as any).storageFiles || [];
+    const imageFilenames = storageFiles.length > 0
+      ? storageFiles.map((file: any) => file.value)
+      : files && Array.isArray(files) ? files.map((file) => file.filename) : [];
+    const imagePublicIds = storageFiles.map((file: any) => file.publicId);
 
     const result = await adminProductService.updateVariant(variantSlug, {
       ...req.body,
       ...(imageFilenames.length > 0 && { imageFilenames }),
+      ...(imageFilenames.length > 0 && { imagePublicIds }),
     });
 
     return res.status(200).json(result);

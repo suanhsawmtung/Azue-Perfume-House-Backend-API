@@ -13,7 +13,7 @@ import {
   UpdateProductVariantParams,
 } from "../../types/product";
 import { createError, createSlug, ensureUniqueSlug } from "../../utils/common";
-import { getFilePath, removeFile } from "../../utils/file";
+import { deleteStoredFile } from "../storage/storage-reference";
 import {
   buildProductWhere,
   deleteProductRecord,
@@ -259,6 +259,7 @@ export class AdminProductService implements IAdminProductService {
       price,
       discount,
       imageFilenames,
+      imagePublicIds,
       isPrimary,
       isActive,
     } = params;
@@ -321,6 +322,7 @@ export class AdminProductService implements IAdminProductService {
         await tx.image.createMany({
           data: imageFilenames.map((filename, index) => ({
             path: filename,
+            publicId: imagePublicIds?.[index] || null,
             isPrimary: index === 0,
             order: index,
             productVariantId: newVariant.id,
@@ -354,6 +356,7 @@ export class AdminProductService implements IAdminProductService {
       price,
       discount,
       imageFilenames,
+      imagePublicIds,
       imageLayout,
       isPrimary,
       isActive,
@@ -425,9 +428,7 @@ export class AdminProductService implements IAdminProductService {
 
         if (imagesToDelete.length > 0) {
           for (const img of imagesToDelete) {
-            await removeFile(
-              getFilePath("uploads", "images", "product", img.path),
-            );
+            await deleteStoredFile(img.path, img.publicId, "product");
           }
           await tx.image.deleteMany({
             where: { id: { in: imagesToDelete.map((i) => i.id) } },
@@ -451,6 +452,7 @@ export class AdminProductService implements IAdminProductService {
           await tx.image.create({
             data: {
               path,
+              publicId: imagePublicIds?.[imageFilenames?.indexOf(path) ?? -1] || null,
               isPrimary: i === 0,
               order: i,
               productVariantId: existing.id,
@@ -486,7 +488,7 @@ export class AdminProductService implements IAdminProductService {
 
     if (images.length > 0) {
       for (const img of images) {
-        await removeFile(getFilePath("uploads", "images", "product", img.path));
+        await deleteStoredFile(img.path, img.publicId, "product");
       }
     }
 

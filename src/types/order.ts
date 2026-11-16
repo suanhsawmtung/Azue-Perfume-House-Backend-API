@@ -154,5 +154,6 @@ export type PlaceOrderParams = {
     quantity: number | string;
   }>;
   userId: number | string;
-  imageFilename: string;
+  imageFilename?: string;
+  imagePublicId?: string | null;
 };

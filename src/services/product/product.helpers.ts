@@ -7,7 +7,7 @@ import {
   ParseProductQueryParamsResult,
 } from "../../types/product";
 import { createError, createSlug, ensureUniqueSlug } from "../../utils/common";
-import { getFilePath, removeFile } from "../../utils/file";
+import { deleteStoredFile } from "../storage/storage-reference";
 
 const parseBoolean = (value: any) => {
   if (typeof value === "boolean") return value;
@@ -454,12 +454,14 @@ export const deleteProductVariantFully = (variantId: number) => {
 export const createVariantImages = async (
   productVariantId: number,
   imageFilenames: string[],
+  imagePublicIds: (string | null)[] = [],
 ) => {
   if (imageFilenames.length === 0) return;
 
   await prisma.image.createMany({
     data: imageFilenames.map((filename, index) => ({
       path: filename,
+      publicId: imagePublicIds[index] || null,
       isPrimary: index === 0,
       order: index,
       productVariantId,
@@ -624,7 +626,7 @@ export const deleteProductRecord = async (id: number) => {
     const images = variantIds.length
       ? await tx.image.findMany({
           where: { productVariantId: { in: variantIds } },
-          select: { id: true, path: true },
+        select: { id: true, path: true, publicId: true },
         })
       : [];
 
@@ -634,7 +636,7 @@ export const deleteProductRecord = async (id: number) => {
   if (images.length > 0) {
     await Promise.all(
       images.map((image) =>
-        removeFile(getFilePath("uploads", "images", "product", image.path)),
+        deleteStoredFile(image.path, image.publicId, "product"),
       ),
     );
 

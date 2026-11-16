@@ -59,10 +59,12 @@ export const placeOrder = async (
 ) => {
   try {
     const file = (req as any).file as Express.Multer.File | undefined;
+    const storageFile = (req as any).storageFile;
 
     const result = await orderService.placeOrder({
       ...req.body,
-      imageFilename: file?.filename,
+      imageFilename: storageFile?.value || file?.filename,
+      imagePublicId: storageFile?.publicId,
       userId: req.userId,
     });
 

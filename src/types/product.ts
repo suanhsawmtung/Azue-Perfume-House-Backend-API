@@ -178,6 +178,7 @@ export type CreateProductVariantParams = {
   price: number | string;
   discount?: number | string;
   imageFilenames?: string[];
+  imagePublicIds?: (string | null)[];
   isPrimary?: boolean;
   isActive?: boolean;
 };
@@ -188,6 +189,7 @@ export type UpdateProductVariantParams = {
   price: number | string;
   discount?: number | string;
   imageFilenames?: string[];
+  imagePublicIds?: (string | null)[];
   existingImages?: string[];
   imageLayout?: string[];
   isPrimary?: boolean;

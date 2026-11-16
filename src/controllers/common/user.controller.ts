@@ -61,12 +61,16 @@ export const updateMe = async (
     const userId = Number(req.userId);
     const { firstName, lastName, phone } = req.body;
     const file = (req as any).file as Express.Multer.File | undefined;
+    const storageFile = (req as any).storageFile;
 
     const result = await profileService.updateMe(userId, {
       firstName,
       lastName,
       phone,
-      ...(file?.filename && { imageFilename: file.filename }),
+      ...((storageFile?.value || file?.filename) && {
+        imageFilename: storageFile?.value || file?.filename,
+        imagePublicId: storageFile?.publicId,
+      }),
     });
 
     (req as any).uploadedFiles = [];

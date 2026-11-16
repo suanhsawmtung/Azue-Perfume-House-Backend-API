@@ -1,5 +1,11 @@
 import { Concentration, Gender } from "@prisma/client";
 
+// const getSeedImagePath = (path: string) =>
+//   process.env.APP_ENV === "development" ? path.split("/").pop() ?? path : path;
+
+const getSeedImagePath = (path: string) =>
+  process.env.APP_ENV === "development" ? path : path;
+
 export const brands = [
   { name: "Versace", slug: "versace" },
   { name: "Jean Paul Gaultier", slug: "jean-paul-gaultier" },
@@ -23,13 +29,14 @@ export const categories = [
   { name: "History", slug: "history" },
 ];
 
-export const products = [
+const productSeedData = [
   {
     name: "Miss Dior",
     brandSlug: "dior",
     concentration: Concentration.EDP,
     gender: Gender.FEMALE,
-    description: "A colorful floral 'millefiori' scent with Centifolia rose, peony, and iris notes.",
+    description:
+      "A colorful floral 'millefiori' scent with Centifolia rose, peony, and iris notes.",
     releasedYear: 2021,
     variants: [
       {
@@ -39,20 +46,21 @@ export const products = [
         stock: 15,
         images: [
           {
-            path: "https://cdn.salla.sa/onxjbX/08d33866-d38a-40aa-b863-f1097f2ccc84-1000x1000-lrAsVE6XqDdSSgb7hLIiyIHV30hFqMYxcphyDQCe.png",
+            path: "https://images.azueperfumehouse.store/product/miss-dior-100.webp",
             isPrimary: true,
-            order: 0
-          }
-        ]
-      }
-    ]
+            order: 0,
+          },
+        ],
+      },
+    ],
   },
   {
     name: "J'adore",
     brandSlug: "dior",
     concentration: Concentration.EDP,
     gender: Gender.FEMALE,
-    description: "An iconic, opulent floral bouquet of Ylang-Ylang, Damascus Rose, and Jasmine.",
+    description:
+      "An iconic, opulent floral bouquet of Ylang-Ylang, Damascus Rose, and Jasmine.",
     releasedYear: 1999,
     variants: [
       {
@@ -62,20 +70,21 @@ export const products = [
         stock: 12,
         images: [
           {
-            path: "https://down-my.img.susercontent.com/file/my-11134207-7rasm-m7u88g1d7an292",
+            path: "https://images.azueperfumehouse.store/product/jadore-100.jpeg",
             isPrimary: true,
-            order: 0
-          }
-        ]
-      }
-    ]
+            order: 0,
+          },
+        ],
+      },
+    ],
   },
   {
     name: "Libre",
     brandSlug: "ysl",
     concentration: Concentration.EDP,
     gender: Gender.FEMALE,
-    description: "The fragrance of freedom, blending Moroccan orange blossom with French lavender.",
+    description:
+      "The fragrance of freedom, blending Moroccan orange blossom with French lavender.",
     releasedYear: 2019,
     variants: [
       {
@@ -85,20 +94,21 @@ export const products = [
         stock: 20,
         images: [
           {
-            path: "https://isetankl.com.my/cdn/shop/files/ysl-beauty-fragrance-libre-eau-de-parfum-4.jpg?v=1762930235&width=1800",
+            path: "https://images.azueperfumehouse.store/product/libre-90.webp",
             isPrimary: true,
-            order: 0
-          }
-        ]
-      }
-    ]
+            order: 0,
+          },
+        ],
+      },
+    ],
   },
   {
     name: "Black Opium",
     brandSlug: "ysl",
     concentration: Concentration.EDP,
     gender: Gender.FEMALE,
-    description: "A captivating and energizing scent with notes of black coffee, white florals, and vanilla.",
+    description:
+      "A captivating and energizing scent with notes of black coffee, white florals, and vanilla.",
     releasedYear: 2014,
     variants: [
       {
@@ -108,13 +118,13 @@ export const products = [
         stock: 18,
         images: [
           {
-            path: "https://fragrancemyra.com/wp-content/uploads/2022/01/p394534-av-01-zoom.jpg",
+            path: "https://images.azueperfumehouse.store/product/black-opium-90.jpg",
             isPrimary: true,
-            order: 0
-          }
-        ]
-      }
-    ]
+            order: 0,
+          },
+        ],
+      },
+    ],
   },
 
   // 5 Pure Male Perfumes
@@ -123,7 +133,8 @@ export const products = [
     brandSlug: "ysl",
     concentration: Concentration.EDP,
     gender: Gender.MALE,
-    description: "A bold and sophisticated fragrance with fresh bergamot, ginger, and sage.",
+    description:
+      "A bold and sophisticated fragrance with fresh bergamot, ginger, and sage.",
     releasedYear: 2018,
     variants: [
       {
@@ -133,20 +144,21 @@ export const products = [
         stock: 25,
         images: [
           {
-            path: "https://isetankl.com.my/cdn/shop/files/ysl-beauty-fragrance-y-eau-de-parfum-intense-4.jpg?v=1716191681&width=1080",
+            path: "https://images.azueperfumehouse.store/product/y-eau-de-parfum-100.webp",
             isPrimary: true,
-            order: 0
-          }
-        ]
-      }
-    ]
+            order: 0,
+          },
+        ],
+      },
+    ],
   },
   {
     name: "Acqua di Giò Profondo",
     brandSlug: "giorgio-armani",
     concentration: Concentration.EDP,
     gender: Gender.MALE,
-    description: "A deep, marine intensity with notes of green mandarin and mineral essences.",
+    description:
+      "A deep, marine intensity with notes of green mandarin and mineral essences.",
     releasedYear: 2020,
     variants: [
       {
@@ -156,20 +168,21 @@ export const products = [
         stock: 10,
         images: [
           {
-            path: "https://www.giorgioarmanibeauty.com.au/on/demandware.static/-/Sites-armani-au-ng-Library/en_AU/dw8b1989ff/images/pdp/ww-00846-arm/ww-00846-arm-adg-parfum-comparison-visual.jpg",
+            path: "https://images.azueperfumehouse.store/product/acqua-di-gi-profondo-100.webp",
             isPrimary: true,
-            order: 0
-          }
-        ]
-      }
-    ]
+            order: 0,
+          },
+        ],
+      },
+    ],
   },
   {
     name: "Stronger With You",
     brandSlug: "giorgio-armani",
     concentration: Concentration.EDT,
     gender: Gender.MALE,
-    description: "A warm, spicy fragrance with notes of cardamom, pink pepper, and smoky vanilla.",
+    description:
+      "A warm, spicy fragrance with notes of cardamom, pink pepper, and smoky vanilla.",
     releasedYear: 2017,
     variants: [
       {
@@ -179,20 +192,21 @@ export const products = [
         stock: 15,
         images: [
           {
-            path: "https://images.stylishop.com/cdn-cgi/image/format=avif/media/catalog/product/2910504043/images/2910504043_3.jpg?v=1",
+            path: "https://images.azueperfumehouse.store/product/stronger-with-you-100.jpg",
             isPrimary: true,
-            order: 0
-          }
-        ]
-      }
-    ]
+            order: 0,
+          },
+        ],
+      },
+    ],
   },
   {
     name: "CK One",
     brandSlug: "calvin-klein",
     concentration: Concentration.EDT,
     gender: Gender.UNISEX, // Although requested in male section, CK One is historically the iconic unisex
-    description: "The original clean and fresh scent that defines shared fragrance with green tea and citrus.",
+    description:
+      "The original clean and fresh scent that defines shared fragrance with green tea and citrus.",
     releasedYear: 1994,
     variants: [
       {
@@ -202,20 +216,21 @@ export const products = [
         stock: 30,
         images: [
           {
-            path: "https://static.sweetcare.com/img/prd/488/v-638606237710856005/calvin-klein-011598ck-1.webp",
+            path: "https://images.azueperfumehouse.store/product/ck-one-100.webp",
             isPrimary: true,
-            order: 0
-          }
-        ]
-      }
-    ]
+            order: 0,
+          },
+        ],
+      },
+    ],
   },
   {
     name: "L'Homme",
     brandSlug: "ysl",
     concentration: Concentration.EDT,
     gender: Gender.MALE,
-    description: "A woody floral musk fragrance with ginger, bergamot, and cedar.",
+    description:
+      "A woody floral musk fragrance with ginger, bergamot, and cedar.",
     releasedYear: 2006,
     variants: [
       {
@@ -225,13 +240,13 @@ export const products = [
         stock: 12,
         images: [
           {
-            path: "https://perfumedubai.com/cdn/shop/files/63_d77e8b6e-246e-4166-93af-0a29fb7faaab_460x@2x.png?v=1741505017",
+            path: "https://images.azueperfumehouse.store/product/lhomme-100.webp",
             isPrimary: true,
-            order: 0
-          }
-        ]
-      }
-    ]
+            order: 0,
+          },
+        ],
+      },
+    ],
   },
 
   // 2 Unisex Perfumes
@@ -240,7 +255,8 @@ export const products = [
     brandSlug: "maison-francis-kurkdjian",
     concentration: Concentration.EDP,
     gender: Gender.UNISEX,
-    description: "A highly concentrated, sophisticated scent with woody, amber, and jasmine accords.",
+    description:
+      "A highly concentrated, sophisticated scent with woody, amber, and jasmine accords.",
     releasedYear: 2015,
     variants: [
       {
@@ -250,20 +266,21 @@ export const products = [
         stock: 5,
         images: [
           {
-            path: "https://osswald.ch/cdn/shop/files/baccarat_rouge_540_eau_de_parfum.jpg?v=1764944383",
+            path: "https://images.azueperfumehouse.store/product/baccarat-rouge-540-70.webp",
             isPrimary: true,
-            order: 0
-          }
-        ]
-      }
-    ]
+            order: 0,
+          },
+        ],
+      },
+    ],
   },
   {
     name: "Santal 33",
     brandSlug: "le-labo",
     concentration: Concentration.EDP,
     gender: Gender.UNISEX,
-    description: "A woody aromatic fragrance that evokes the spirit of the American West with sandalwood and leather.",
+    description:
+      "A woody aromatic fragrance that evokes the spirit of the American West with sandalwood and leather.",
     releasedYear: 2011,
     variants: [
       {
@@ -273,20 +290,21 @@ export const products = [
         stock: 7,
         images: [
           {
-            path: "https://almaycasa.co.il/cdn/shop/files/LE_LABO_Santal_33_100ml_EDP_Take_App_03.jpg?v=1732991153",
+            path: "https://images.azueperfumehouse.store/product/santal-33-100.webp",
             isPrimary: true,
-            order: 0
-          }
-        ]
-      }
-    ]
+            order: 0,
+          },
+        ],
+      },
+    ],
   },
   {
     name: "Acqua di Giò Pour Homme",
     brandSlug: "giorgio-armani",
     concentration: Concentration.EDT,
     gender: Gender.MALE,
-    description: "A classic aquatic fragrance that opens with a splash of fresh, calabrian bergamot, neroli and green tangerine.",
+    description:
+      "A classic aquatic fragrance that opens with a splash of fresh, calabrian bergamot, neroli and green tangerine.",
     releasedYear: 1996,
     variants: [
       {
@@ -296,20 +314,21 @@ export const products = [
         stock: 10,
         images: [
           {
-            path: "https://images.unsplash.com/photo-1619994403073-2cec844b8e63?w=800&q=80",
+            path: "https://images.azueperfumehouse.store/product/acqua-di-gi-pour-homme-100.jpeg",
             isPrimary: true,
-            order: 0
-          }
-        ]
-      }
-    ]
+            order: 0,
+          },
+        ],
+      },
+    ],
   },
   {
     name: "Chanel N°5",
     brandSlug: "chanel",
     concentration: Concentration.EDP,
     gender: Gender.FEMALE,
-    description: "The essence of femininity. A powdery floral bouquet housed in an iconic bottle with a minimalist design.",
+    description:
+      "The essence of femininity. A powdery floral bouquet housed in an iconic bottle with a minimalist design.",
     releasedYear: 1921,
     variants: [
       {
@@ -319,20 +338,21 @@ export const products = [
         stock: 12,
         images: [
           {
-            path: "https://images.unsplash.com/photo-1541643600914-78b084683601?w=800&q=80",
+            path: "https://images.azueperfumehouse.store/product/chanel-n5-100.jpeg",
             isPrimary: true,
-            order: 0
-          }
-        ]
-      }
-    ]
+            order: 0,
+          },
+        ],
+      },
+    ],
   },
   {
     name: "Coco Chanel",
     brandSlug: "chanel",
     concentration: Concentration.EDP,
     gender: Gender.FEMALE,
-    description: "A spicy, floral fragrance that reveals the contrasting notes of the ambery spirit. Intense and baroque.",
+    description:
+      "A spicy, floral fragrance that reveals the contrasting notes of the ambery spirit. Intense and baroque.",
     releasedYear: 1984,
     variants: [
       {
@@ -342,20 +362,21 @@ export const products = [
         stock: 8,
         images: [
           {
-            path: "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=800&q=80",
+            path: "https://images.azueperfumehouse.store/product/coco-chanel-100.jpeg",
             isPrimary: true,
-            order: 0
-          }
-        ]
-      }
-    ]
+            order: 0,
+          },
+        ],
+      },
+    ],
   },
   {
     name: "Coco Noir",
     brandSlug: "chanel",
     concentration: Concentration.EDP,
     gender: Gender.FEMALE,
-    description: "The magnetic and uncompromising modern ambery fragrance with luminous notes of May Rose and Geranium leaf.",
+    description:
+      "The magnetic and uncompromising modern ambery fragrance with luminous notes of May Rose and Geranium leaf.",
     releasedYear: 2012,
     variants: [
       {
@@ -365,20 +386,21 @@ export const products = [
         stock: 5,
         images: [
           {
-            path: "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=800&q=80",
+            path: "https://images.azueperfumehouse.store/product/coco-noir-100.jpeg",
             isPrimary: true,
-            order: 0
-          }
-        ]
-      }
-    ]
+            order: 0,
+          },
+        ],
+      },
+    ],
   },
   {
     name: "Coco Mademoiselle",
     brandSlug: "chanel",
     concentration: Concentration.EDP,
     gender: Gender.FEMALE,
-    description: "A vibrant, voluptuous ambery-fresh fragrance. Sparks of orange lead to a clear heart of May Rose and Jasmine.",
+    description:
+      "A vibrant, voluptuous ambery-fresh fragrance. Sparks of orange lead to a clear heart of May Rose and Jasmine.",
     releasedYear: 2001,
     variants: [
       {
@@ -388,20 +410,21 @@ export const products = [
         stock: 15,
         images: [
           {
-            path: "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=800&q=80",
+            path: "https://images.azueperfumehouse.store/product/coco-mademoiselle-100.jpeg",
             isPrimary: true,
-            order: 0
-          }
-        ]
-      }
-    ]
+            order: 0,
+          },
+        ],
+      },
+    ],
   },
   {
     name: "Apex Eau Intense",
     brandSlug: "roja-parfums",
     concentration: Concentration.EDP,
     gender: Gender.MALE,
-    description: "A fresh and powerful chypré scent with vibrant citrus, pineapple, and deep woody notes of fir balsam and sandalwood.",
+    description:
+      "A fresh and powerful chypré scent with vibrant citrus, pineapple, and deep woody notes of fir balsam and sandalwood.",
     releasedYear: 2023,
     variants: [
       {
@@ -411,20 +434,21 @@ export const products = [
         stock: 5,
         images: [
           {
-            path: "https://scentira.in/cdn/shop/files/Roja_Apex_Eau_Intense_Eau_de_Parfum_4_dd78085a-e13e-4607-9e5f-1ea612b6820c.png?v=1758360447&width=1000",
+            path: "https://images.azueperfumehouse.store/product/apex-eau-intense-100.webp",
             isPrimary: true,
-            order: 0
-          }
-        ]
-      }
-    ]
+            order: 0,
+          },
+        ],
+      },
+    ],
   },
   {
     name: "Elysium Pour Homme",
     brandSlug: "roja-parfums",
     concentration: Concentration.PARFUM,
     gender: Gender.MALE,
-    description: "An ultra-fresh citrus blend of lemon, bergamot, and lime, anchored by rich ambergris and leather.",
+    description:
+      "An ultra-fresh citrus blend of lemon, bergamot, and lime, anchored by rich ambergris and leather.",
     releasedYear: 2017,
     variants: [
       {
@@ -434,20 +458,21 @@ export const products = [
         stock: 8,
         images: [
           {
-            path: "https://www.myperfumeshop.qa/cdn/shop/files/roja-parfums-elysium-pour-homme-edp-perfume-cologne-977788.webp?v=1741712220&width=800",
+            path: "https://images.azueperfumehouse.store/product/elysium-pour-homme-100.webp",
             isPrimary: true,
-            order: 0
-          }
-        ]
-      }
-    ]
+            order: 0,
+          },
+        ],
+      },
+    ],
   },
   {
     name: "Versace Eros Energy",
     brandSlug: "versace",
     concentration: Concentration.EDP,
     gender: Gender.MALE,
-    description: "A high-energy flanker of the Eros line, featuring a burst of citrus notes like blood orange and lime with a woody base.",
+    description:
+      "A high-energy flanker of the Eros line, featuring a burst of citrus notes like blood orange and lime with a woody base.",
     releasedYear: 2024,
     variants: [
       {
@@ -457,20 +482,21 @@ export const products = [
         stock: 15,
         images: [
           {
-            path: "https://img01.ztat.net/article/spp-media-p1/9b0bfc5379bc454ca0dff8cff7b29c02/32df744fad644eeb8409dffa5d0d34a6.jpg?imwidth=762",
+            path: "https://images.azueperfumehouse.store/product/versace-eros-energy-100.webp",
             isPrimary: true,
-            order: 0
-          }
-        ]
-      }
-    ]
+            order: 0,
+          },
+        ],
+      },
+    ],
   },
-   {
+  {
     name: "Acqua di Giò Eau de Parfum",
     brandSlug: "giorgio-armani",
     concentration: Concentration.EDP,
     gender: Gender.MALE,
-    description: "A long-lasting masculine fragrance where the infinite spirit of the sea meets a powerful green mandarin opening. Clary sage and lavender provide a sophisticated aromatic heart, while sustainably sourced patchouli leaves a warm, mineral trail on the skin.",
+    description:
+      "A long-lasting masculine fragrance where the infinite spirit of the sea meets a powerful green mandarin opening. Clary sage and lavender provide a sophisticated aromatic heart, while sustainably sourced patchouli leaves a warm, mineral trail on the skin.",
     releasedYear: 2024,
     variants: [
       {
@@ -480,20 +506,21 @@ export const products = [
         stock: 15,
         images: [
           {
-            path: "https://www.dumyah.com/image/cache/data/2025/09/17567103481595140817-800x800.webp",
+            path: "https://images.azueperfumehouse.store/product/acqua-di-gi-eau-de-parfum-100.webp",
             isPrimary: true,
-            order: 0
-          }
-        ]
-      }
-    ]
+            order: 0,
+          },
+        ],
+      },
+    ],
   },
   {
     name: "Acqua di Giò Profondo Eau de Parfum",
     brandSlug: "giorgio-armani",
     concentration: Concentration.EDP,
     gender: Gender.MALE,
-    description: "Plunge into the deep blue with this intense marine interpretation of the original classic. It opens with salty aquatic notes and bergamot, evolving into an aromatic blend of rosemary and cypress, eventually settling into a profound base of mineral amber and musk.",
+    description:
+      "Plunge into the deep blue with this intense marine interpretation of the original classic. It opens with salty aquatic notes and bergamot, evolving into an aromatic blend of rosemary and cypress, eventually settling into a profound base of mineral amber and musk.",
     releasedYear: 2020,
     variants: [
       {
@@ -503,20 +530,21 @@ export const products = [
         stock: 10,
         images: [
           {
-            path: "https://media.parfumo.com/user_imagery/41/41_bf3286d5ee6f2ccfabb7f853c115fb937662a111_1200.jpg",
+            path: "https://images.azueperfumehouse.store/product/acqua-di-gi-profondo-eau-de-parfum-100.webp",
             isPrimary: true,
-            order: 0
-          }
-        ]
-      }
-    ]
+            order: 0,
+          },
+        ],
+      },
+    ],
   },
   {
     name: "Acqua di Giò Profondo Parfum",
     brandSlug: "giorgio-armani",
     concentration: Concentration.PARFUM,
     gender: Gender.MALE,
-    description: "An even more mysterious and addictive intensity that captures the absolute depth of the ocean. This parfum concentration amplifies the signature marine notes with a unique balsamic cistus and a mineral salty accord, creating a magnetic and enduring scent profile.",
+    description:
+      "An even more mysterious and addictive intensity that captures the absolute depth of the ocean. This parfum concentration amplifies the signature marine notes with a unique balsamic cistus and a mineral salty accord, creating a magnetic and enduring scent profile.",
     releasedYear: 2024,
     variants: [
       {
@@ -526,13 +554,13 @@ export const products = [
         stock: 12,
         images: [
           {
-            path: "https://static.thcdn.com/productimg/original/14605837-1745104066168608.jpg",
+            path: "https://images.azueperfumehouse.store/product/acqua-di-gi-profondo-parfum-100.jpg",
             isPrimary: true,
-            order: 0
-          }
-        ]
-      }
-    ]
+            order: 0,
+          },
+        ],
+      },
+    ],
   },
   {
     name: "Versace Bright Crystal",
@@ -550,16 +578,16 @@ export const products = [
         stock: 5,
         images: [
           {
-            path: "https://i.ebayimg.com/images/g/FRoAAOSwi0Nksjsk/s-l1200.jpg",
+            path: "https://images.azueperfumehouse.store/product/versace-bright-crystal-10-1.jpg",
             isPrimary: true,
-            order: 0
+            order: 0,
           },
           {
-            path: "https://u-mercari-images.mercdn.net/photos/m41866060093_1.jpg?width=2560&quality=75&_=1706535162",
+            path: "https://images.azueperfumehouse.store/product/versace-bright-crystal-10-2.webp",
             isPrimary: false,
-            order: 1
+            order: 1,
           },
-        ]
+        ],
       },
       {
         size: 90,
@@ -568,16 +596,16 @@ export const products = [
         stock: 20,
         images: [
           {
-            path: "https://shins.my/media/catalog/product/cache/4e22e919b2ba2a78127fbd5624ab1858/1/0/10103010200506-800x800_1.jpg",
+            path: "https://images.azueperfumehouse.store/product/versace-bright-crystal-90-1.jpg",
             isPrimary: true,
-            order: 0
+            order: 0,
           },
           {
-            path: "https://fragrancemyra.com/wp-content/uploads/2022/05/8CE5C374-601F-493B-822C-A87755FF042F.png",
+            path: "https://images.azueperfumehouse.store/product/versace-bright-crystal-90-2.png",
             isPrimary: false,
-            order: 1
+            order: 1,
           },
-        ]
+        ],
       },
     ],
   },
@@ -597,16 +625,16 @@ export const products = [
         stock: 20,
         images: [
           {
-            path: "https://fandi-perfume.com/cdn/shop/files/versace-bright-crystal-absolu-for-women-eau-de-parfum-1217974189.png?v=1769518349&width=1024",
+            path: "https://images.azueperfumehouse.store/product/versace-bright-crystal-absolu-30-1.webp",
             isPrimary: true,
-            order: 0
+            order: 0,
           },
           {
-            path: "https://shins.my/media/catalog/product/cache/4e22e919b2ba2a78127fbd5624ab1858/b/u/buy_4_at_rm99_-_2022-09-06t104855.340.png",
+            path: "https://images.azueperfumehouse.store/product/versace-bright-crystal-absolu-30-2.png",
             isPrimary: false,
-            order: 1
+            order: 1,
           },
-        ]
+        ],
       },
       {
         size: 90,
@@ -615,11 +643,11 @@ export const products = [
         stock: 8,
         images: [
           {
-            path: "https://image-optimizer-reg.production.sephora-asia.net/images/product_images/closeup_1_Product_185776_20Versace_20Bright_20Crystal_20Absolu_20EDP_2090ml_92ae912c88747d41037977583b100c66c931b8dc_1528361453.png",
+            path: "https://images.azueperfumehouse.store/product/versace-bright-crystal-absolu-90.webp",
             isPrimary: true,
-            order: 0
+            order: 0,
           },
-        ]
+        ],
       },
     ],
   },
@@ -639,16 +667,16 @@ export const products = [
         stock: 40,
         images: [
           {
-            path: "https://images.tcdn.com.br/img/img_prod/1251682/jean_paul_gaultier_le_male_edt_1317_2_f6b8ae36447e58a7fc5f52a5d3c7b84c.jpg",
+            path: "https://images.azueperfumehouse.store/product/le-male-40-1.webp",
             isPrimary: true,
-            order: 0
+            order: 0,
           },
           {
-            path: "https://static.beautytocare.com/cdn-cgi/image/width=1600,height=1600,f=auto/media/catalog/product//j/e/jean-paul-gaultier-le-male-eau-de-toilette-40ml_1.jpg",
+            path: "https://images.azueperfumehouse.store/product/le-male-40-2.avif",
             isPrimary: false,
-            order: 1
+            order: 1,
           },
-        ]
+        ],
       },
       {
         size: 75,
@@ -657,11 +685,11 @@ export const products = [
         stock: 9,
         images: [
           {
-            path: "https://image-optimizer-reg.production.sephora-asia.net/images/product_images/closeup_1_Product_8435415012638-JEAN-PAUL-GAULTIER-Le-Male-Eau-De-To_838df6d6cfb4d53323cedb910c7a2a43eb66e710_1728632779.png",
+            path: "https://images.azueperfumehouse.store/product/le-male-75.webp",
             isPrimary: true,
-            order: 0
+            order: 0,
           },
-        ]
+        ],
       },
     ],
   },
@@ -681,11 +709,11 @@ export const products = [
         stock: 15,
         images: [
           {
-            path: "https://down-tw.img.susercontent.com/file/971feba3a4be41d06103fb508e36c589",
+            path: "https://images.azueperfumehouse.store/product/lost-cherry-50.jpeg",
             isPrimary: true,
-            order: 0
+            order: 0,
           },
-        ]
+        ],
       },
       {
         size: 30,
@@ -694,16 +722,16 @@ export const products = [
         stock: 50,
         images: [
           {
-            path: "https://a.cdnsbn.com/images/products/xl/26066398006.jpg",
+            path: "https://images.azueperfumehouse.store/product/lost-cherry-30-1.jpg",
             isPrimary: false,
-            order: 0
+            order: 0,
           },
           {
-            path: "https://cdn.idealo.com/folder/Product/200736/4/200736492/s3_produktbild_max_5/tom-ford-lost-cherry-eau-parfum-30ml.jpg",
+            path: "https://images.azueperfumehouse.store/product/lost-cherry-30-2.jpg",
             isPrimary: true,
-            order: 1
+            order: 1,
           },
-        ]
+        ],
       },
     ],
   },
@@ -723,19 +751,19 @@ export const products = [
         stock: 25,
         images: [
           {
-            path: "https://www.versace.com/dw/image/v2/BGWN_PRD/on/demandware.static/-/Sites-ver-master-catalog/default/dwb90e5c70/original/90_R740008-R050MLS_RNUL_20_Eros~EDT~50~ml-Accessories-Versace-online-store_0_1.jpg?sw=850&q=85&strip=true",
+            path: "https://images.azueperfumehouse.store/product/versace-eros-50-1.avif",
             isPrimary: false,
-            order: 1
+            order: 1,
           },
           {
-            path: "https://www.versace.com/dw/image/v2/BGWN_PRD/on/demandware.static/-/Sites-ver-master-catalog/default/dw81139a10/original/90_R740008-R050MLS_RNUL_22_Eros~EDT~50~ml-Accessories-Versace-online-store_0_1.jpg?sw=850&q=85&strip=true",
+            path: "https://images.azueperfumehouse.store/product/versace-eros-50-2.avif",
             isPrimary: false,
-            order: 2
+            order: 2,
           },
           {
-            path: "https://www.versace.com/on/demandware.static/-/Library-Sites-ver-library/default/dwbf3cbf93/EROS.jpg",
+            path: "https://images.azueperfumehouse.store/product/versace-eros-50-3.avif",
             isPrimary: false,
-            order: 3
+            order: 3,
           },
           // {
           //   path: "https://cdn.paris-avenues.com/image/cache/catalog/Product2/8011003809202-Versace-Eros-EDT-50-Ml--1000x1000.jpg",
@@ -743,9 +771,9 @@ export const products = [
           //   order: 0
           // },
           {
-            path: "https://images.unsplash.com/photo-1587017539504-67cfbddac569?w=800&q=80",
+            path: "https://images.azueperfumehouse.store/product/versace-eros-50-4.jpeg",
             isPrimary: true,
-            order: 0
+            order: 0,
           },
         ],
       },
@@ -753,11 +781,24 @@ export const products = [
   },
 ];
 
-export const posts = [
+export const products = productSeedData.map((product) => ({
+  ...product,
+  variants: product.variants.map((variant) => ({
+    ...variant,
+    images: variant.images.map((image) => ({
+      ...image,
+      path: getSeedImagePath(image.path),
+    })),
+  })),
+}));
+
+const postSeedData = [
   {
     title: "The Art of Layering Fragrances: A Complete Guide",
-    excerpt: "Discover how to combine multiple perfumes to create your own unique signature scent. Learn the techniques used by professional perfumers.",
-    image: "https://images.unsplash.com/photo-1615634260167-c8cdede054de?w=800&q=80",
+    excerpt:
+      "Discover how to combine multiple perfumes to create your own unique signature scent. Learn the techniques used by professional perfumers.",
+    image:
+      "https://images.azueperfumehouse.store/post/the-art-of-layering-fragrances-a-complete-guide.jpeg",
     categorySlug: "guide",
     content:
       "Fragrance layering is an art form that allows you to create a personalized scent that's uniquely yours. By combining different perfumes strategically, you can achieve a complexity and depth that single fragrances often can't provide.<br/><br/>" +
@@ -788,8 +829,10 @@ export const posts = [
   },
   {
     title: "Top 10 Perfume Trends for 2024",
-    excerpt: "From sustainable ingredients to nostalgic scents, explore the fragrance trends that are defining this year's perfume landscape.",
-    image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80",
+    excerpt:
+      "From sustainable ingredients to nostalgic scents, explore the fragrance trends that are defining this year's perfume landscape.",
+    image:
+      "https://images.azueperfumehouse.store/post/top-10-perfume-trends-for-2024.jpeg",
     categorySlug: "trends",
     content:
       "The perfume industry is constantly evolving, and 2024 brings exciting new trends that reflect our changing world and values.<br/><br/>" +
@@ -806,8 +849,10 @@ export const posts = [
   },
   {
     title: "How to Make Your Perfume Last All Day",
-    excerpt: "Expert tips and tricks to maximize the longevity of your favorite fragrances, from application techniques to storage solutions.",
-    image: "https://images.unsplash.com/photo-1595535873420-a599195b3f4a?w=800&q=80",
+    excerpt:
+      "Expert tips and tricks to maximize the longevity of your favorite fragrances, from application techniques to storage solutions.",
+    image:
+      "https://images.azueperfumehouse.store/post/how-to-make-your-perfume-last-all-day.jpeg",
     categorySlug: "tips",
     content:
       "Nothing is more frustrating than spraying on your favorite perfume only to have it fade within a few hours. Here's how to make your scent last from morning to night.<br/><br/>" +
@@ -831,8 +876,10 @@ export const posts = [
   },
   {
     title: "The History of Oud: From Ancient Arabia to Modern Perfumery",
-    excerpt: "Explore the fascinating journey of oud, one of the world's most precious and sought-after fragrance ingredients.",
-    image: "https://images.unsplash.com/photo-1547887538-e3a2f32cb1cc?w=800&q=80",
+    excerpt:
+      "Explore the fascinating journey of oud, one of the world's most precious and sought-after fragrance ingredients.",
+    image:
+      "https://images.azueperfumehouse.store/post/the-history-of-oud-from-ancient-arabia-to-modern-perfumery.jpeg",
     categorySlug: "history",
     content:
       "Oud, also known as agarwood, has been treasured for thousands of years. This precious ingredient has a rich history that spans continents and cultures.<br/><br/>" +
@@ -845,8 +892,10 @@ export const posts = [
   },
   {
     title: "Perfume Gifting Guide: Finding the Perfect Scent",
-    excerpt: "Choosing a perfume for someone else can be daunting. Here's your comprehensive guide to selecting a fragrance gift they'll love.",
-    image: "https://images.unsplash.com/photo-1608528577891-eb055944f2e7?w=800&q=80",
+    excerpt:
+      "Choosing a perfume for someone else can be daunting. Here's your comprehensive guide to selecting a fragrance gift they'll love.",
+    image:
+      "https://images.azueperfumehouse.store/post/perfume-gifting-guide-finding-the-perfect-scent.jpeg",
     categorySlug: "guide",
     content:
       "Gifting perfume can feel risky, but with the right approach, you can choose a fragrance that will delight your recipient.<br/><br/>" +
@@ -868,3 +917,8 @@ export const posts = [
       "A beautifully packaged perfume with a handwritten note shows extra thought and care.",
   },
 ];
+
+export const posts = postSeedData.map((post) => ({
+  ...post,
+  image: getSeedImagePath(post.image),
+}));

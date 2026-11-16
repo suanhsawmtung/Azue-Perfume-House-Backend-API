@@ -5,6 +5,7 @@ import path from "path";
 import { env } from "../../config/env";
 import { CloudinaryStorageProvider } from "./providers/cloudinary.provider";
 import { LocalStorageProvider } from "./providers/local.provider";
+import { R2StorageProvider } from "./providers/r2.provider";
 import { createStorageProvider } from "./storage.factory";
 import { StorageService } from "./storage.service";
 
@@ -13,11 +14,15 @@ jest.mock("./cloudinary.service", () => ({
   deleteImage: jest.fn(),
 }));
 
-jest.mock("cloudinary", () => ({
-  v2: {
-    config: jest.fn(),
-  },
-}), { virtual: true });
+jest.mock(
+  "cloudinary",
+  () => ({
+    v2: {
+      config: jest.fn(),
+    },
+  }),
+  { virtual: true },
+);
 
 import { deleteImage, uploadImage } from "./cloudinary.service";
 
@@ -44,9 +49,11 @@ describe("storage providers", () => {
     const filename = path.basename(result.url);
 
     expect(result).toEqual({ url: `/user/${filename}`, publicId: null });
-    expect(await fs.readFile(path.join(process.cwd(), "uploads/images/user", filename))).toEqual(
-      Buffer.from("file contents"),
-    );
+    expect(
+      await fs.readFile(
+        path.join(process.cwd(), "uploads/images/user", filename),
+      ),
+    ).toEqual(Buffer.from("file contents"));
 
     await provider.deleteFile(filename, "user");
     await expect(
@@ -70,14 +77,20 @@ describe("storage providers", () => {
 
     await expect(
       provider.uploadFile(
-        { buffer: Buffer.from("file"), originalName: "file.jpg", mimeType: "image/jpeg" },
+        {
+          buffer: Buffer.from("file"),
+          originalName: "file.jpg",
+          mimeType: "image/jpeg",
+        },
         "product",
       ),
     ).resolves.toEqual({
       url: "https://res.cloudinary.com/test/image/upload/file.jpg",
       publicId: "azue/products/file",
     });
-    await expect(provider.deleteFile("azue/products/file")).resolves.toBeUndefined();
+    await expect(
+      provider.deleteFile("azue/products/file"),
+    ).resolves.toBeUndefined();
     expect(uploadImage).toHaveBeenCalledWith(
       Buffer.from("file"),
       "azue/products",
@@ -92,7 +105,11 @@ describe("storage providers", () => {
 
     await expect(
       provider.uploadFile(
-        { buffer: Buffer.from("file"), originalName: "file.jpg", mimeType: "image/jpeg" },
+        {
+          buffer: Buffer.from("file"),
+          originalName: "file.jpg",
+          mimeType: "image/jpeg",
+        },
         "post",
       ),
     ).rejects.toThrow("upload failed");
@@ -104,6 +121,20 @@ describe("storage providers", () => {
   test("selects the configured provider and rejects unsupported values", async () => {
     env.storageProvider = "local";
     expect(createStorageProvider()).toBeInstanceOf(LocalStorageProvider);
+
+    env.storageProvider = "cloudinary";
+    expect(createStorageProvider()).toBeInstanceOf(CloudinaryStorageProvider);
+
+    process.env = {
+      ...process.env,
+      R2_ACCOUNT_ID: "account-id",
+      R2_ACCESS_KEY_ID: "access-key",
+      R2_SECRET_ACCESS_KEY: "secret-key",
+      R2_BUCKET_NAME: "azue-perfume-house",
+      R2_PUBLIC_URL: "https://cdn.example.com",
+    };
+    env.storageProvider = "r2";
+    expect(createStorageProvider()).toBeInstanceOf(R2StorageProvider);
 
     env.storageProvider = "unsupported";
     expect(() => createStorageProvider()).toThrow(

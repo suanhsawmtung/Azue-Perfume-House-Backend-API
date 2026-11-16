@@ -192,14 +192,19 @@ pnpm dev
 | `EMAIL_PROVIDER`           | Email provider used by the application      | `log`                                                              |
 | `RESEND_API_KEY`           | API key for Resend email delivery           | `your-resend-api-key`                                              |
 | `RESEND_FROM_EMAIL`        | Sender email address for outgoing emails    | `noreply@example.com`                                              |
-| `STORAGE_PROVIDER`         | File storage provider                       | `local` or `cloudinary`                                            |
+| `STORAGE_PROVIDER`         | File storage provider                       | `local`, `cloudinary`, or `r2`                                     |
 | `ACCESS_TOKEN_SECRET_KEY`  | Secret key used to sign access tokens       | `your-access-token-secret`                                         |
 | `REFRESH_TOKEN_SECRET_KEY` | Secret key used to sign refresh tokens      | `your-refresh-token-secret`                                        |
 | `CORS_ORIGINS`             | Allowed frontend origin(s) for CORS         | `http://localhost:5173`                                            |
 | `DATABASE_URL`             | PostgreSQL connection string used by Prisma | `postgresql://username:password@localhost:5432/azue?schema=public` |
-| `CLOUDINARY_CLOUD_NAME`    | Cloudinary cloud name                        | `your-cloud-name`                                                   |
-| `CLOUDINARY_API_KEY`       | Server-side Cloudinary API key               | `your-cloudinary-api-key`                                          |
-| `CLOUDINARY_API_SECRET`    | Server-side Cloudinary API secret            | `your-cloudinary-api-secret`                                       |
+| `CLOUDINARY_CLOUD_NAME`    | Cloudinary cloud name                       | `your-cloud-name`                                                  |
+| `CLOUDINARY_API_KEY`       | Server-side Cloudinary API key              | `your-cloudinary-api-key`                                          |
+| `CLOUDINARY_API_SECRET`    | Server-side Cloudinary API secret           | `your-cloudinary-api-secret`                                       |
+| `R2_ACCOUNT_ID`            | Cloudflare account ID for the R2 endpoint   | `your-cloudflare-account-id`                                       |
+| `R2_ACCESS_KEY_ID`         | R2 access key ID                            | `your-r2-access-key-id`                                            |
+| `R2_SECRET_ACCESS_KEY`     | R2 secret access key                        | `your-r2-secret-access-key`                                        |
+| `R2_BUCKET_NAME`           | R2 bucket containing uploaded objects       | `azue-perfume-house`                                               |
+| `R2_PUBLIC_URL`            | Public base URL for uploaded objects        | `https://cdn.example.com`                                          |
 
 > **Note:** These are development values. Update them according to your deployment environment.
 
@@ -212,3 +217,9 @@ File storage uses `local` by default. Local uploads are written under
 paths. Production can use `STORAGE_PROVIDER=cloudinary` with the three Cloudinary
 credentials above. Provider selection is server-side and Cloudinary credentials are
 never exposed to the frontend.
+
+Cloudflare R2 is also supported with `STORAGE_PROVIDER=r2`. Configure the five R2
+variables above using credentials for the target bucket. R2 objects are uploaded
+through its S3-compatible API and organized under `post/`, `product/`, `user/`,
+and `order/` prefixes. `R2_PUBLIC_URL` should be the public base URL for the
+bucket or custom domain; trailing slashes are normalized automatically.

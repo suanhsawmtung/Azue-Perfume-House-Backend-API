@@ -12,6 +12,7 @@ import {
   UpdatePostParams,
 } from "../../types/post";
 import { createError, createSlug, ensureUniqueSlug } from "../../utils/common";
+import { deleteStoredFile } from "../storage/storage-reference";
 import {
   buildPostWhere,
   deletePostRecord,
@@ -116,6 +117,7 @@ export class AdminPostService implements IAdminPostService {
       status,
       categoryId,
       imageFilename,
+      imagePublicId,
       authenticatedUserId,
     } = params;
 
@@ -151,6 +153,7 @@ export class AdminPostService implements IAdminPostService {
       status: status || PostStatus.DRAFT,
       publishedAt: status === PostStatus.PUBLISHED ? new Date() : null,
       image: imageFilename || "",
+      imagePublicId: imagePublicId || null,
       author: { connect: { id: authenticatedUserId } },
       category: { connect: { id: Number(categoryId) } },
     });
@@ -166,7 +169,15 @@ export class AdminPostService implements IAdminPostService {
     slug: string,
     params: UpdatePostParams,
   ): Promise<ServiceResponseT<Post>> {
-    const { title, excerpt, content, status, categoryId, imageFilename } =
+    const {
+      title,
+      excerpt,
+      content,
+      status,
+      categoryId,
+      imageFilename,
+      imagePublicId,
+    } =
       params;
 
     const normalizedSlug = requireSlug(slug);
@@ -213,6 +224,7 @@ export class AdminPostService implements IAdminPostService {
 
     if (imageFilename) {
       updateData.image = imageFilename;
+      updateData.imagePublicId = imagePublicId || null;
     }
 
     if (
@@ -223,6 +235,18 @@ export class AdminPostService implements IAdminPostService {
     }
 
     const post = await updatePostRecord(existing.id, updateData);
+
+    if (imageFilename && existing.image) {
+      try {
+        await deleteStoredFile(
+          existing.image,
+          existing.imagePublicId,
+          "post",
+        );
+      } catch (error) {
+        console.warn(error);
+      }
+    }
 
     return {
       success: true,
@@ -244,6 +268,14 @@ export class AdminPostService implements IAdminPostService {
     }
 
     await deletePostRecord(post.id);
+
+    if (post.image) {
+      try {
+        await deleteStoredFile(post.image, post.imagePublicId, "post");
+      } catch (error) {
+        console.warn(error);
+      }
+    }
 
     return {
       success: true,
