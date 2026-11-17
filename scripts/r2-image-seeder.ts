@@ -10,7 +10,7 @@ const seedImages = async () => {
 seedImages()
   .then((result) => {
     console.log(
-      `Image seeding completed: ${result.product} product object(s), ${result.post} post object(s).`,
+      `Image seeding completed: ${result ? `${result.product} product object(s), ${result.post} post object(s), ${result.order} order object(s) deleted.` : "No objects seeded."}`,
     );
   })
   .catch((error) => {

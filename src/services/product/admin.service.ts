@@ -35,6 +35,22 @@ import {
 } from "./product.helpers";
 import { IAdminProductService } from "./product.interface";
 
+const MAX_VARIANT_DECIMAL = 99999999.99;
+
+const parseVariantDecimal = (value: number | string, fieldName: string): number => {
+  const parsed = Number(value);
+
+  if (!Number.isFinite(parsed) || parsed < 0 || parsed > MAX_VARIANT_DECIMAL) {
+    throw createError({
+      message: `${fieldName} must be between 0 and ${MAX_VARIANT_DECIMAL}.`,
+      status: 400,
+      code: errorCode.invalid,
+    });
+  }
+
+  return parsed;
+};
+
 export class AdminProductService implements IAdminProductService {
   async listProducts(
     params: ListProductsParams,
@@ -285,6 +301,9 @@ export class AdminProductService implements IAdminProductService {
     }
 
     const variantSize = Number(size);
+    const variantPrice = parseVariantDecimal(price, "Price");
+    const variantDiscount =
+      discount !== undefined ? parseVariantDecimal(discount, "Discount") : 0;
 
     const skuFinal = await generateUniqueVariantSku(
       Number(productId),
@@ -300,8 +319,8 @@ export class AdminProductService implements IAdminProductService {
           sku: skuFinal,
           slug,
           size: variantSize,
-          price: Number(price),
-          discount: discount ? Number(discount) : 0,
+          price: variantPrice,
+          discount: variantDiscount,
           isPrimary: !!isPrimary,
           isActive: isActive !== undefined ? !!isActive : true,
         },
@@ -374,6 +393,7 @@ export class AdminProductService implements IAdminProductService {
     }
 
     const variantSize = size ? Number(size) : existing.size;
+    let imagesToDelete: { id: number; path: string; publicId: string | null }[] = [];
 
     let slug = existing.slug;
     if (variantSize !== existing.size) {
@@ -395,8 +415,12 @@ export class AdminProductService implements IAdminProductService {
         slug,
       };
 
-      if (price !== undefined) updateData.price = Number(price);
-      if (discount !== undefined) updateData.discount = Number(discount);
+      if (price !== undefined) {
+        updateData.price = parseVariantDecimal(price, "Price");
+      }
+      if (discount !== undefined) {
+        updateData.discount = parseVariantDecimal(discount, "Discount");
+      }
       if (isPrimary !== undefined) updateData.isPrimary = !!isPrimary;
       if (isActive !== undefined) updateData.isActive = !!isActive;
 
@@ -422,14 +446,11 @@ export class AdminProductService implements IAdminProductService {
           where: { productVariantId: existing.id },
         });
 
-        const imagesToDelete = currentImages.filter(
+        imagesToDelete = currentImages.filter(
           (img) => !imageLayout.includes(img.path),
         );
 
         if (imagesToDelete.length > 0) {
-          for (const img of imagesToDelete) {
-            await deleteStoredFile(img.path, img.publicId, "product");
-          }
           await tx.image.deleteMany({
             where: { id: { in: imagesToDelete.map((i) => i.id) } },
           });
@@ -463,6 +484,13 @@ export class AdminProductService implements IAdminProductService {
 
       return updatedVariant;
     });
+
+    // Remote object deletion must happen after the DB transaction. A
+    // transient R2 connection failure must not roll back the variant update
+    // or keep a database transaction open for the network retry window.
+    for (const image of imagesToDelete) {
+      await deleteStoredFile(image.path, image.publicId, "product");
+    }
 
     return {
       success: true,

@@ -34,11 +34,13 @@ describe("resetR2ImagePrefixes", () => {
     await expect(resetR2ImagePrefixes(objectService)).resolves.toEqual({
       product: 1,
       post: 1,
+      order: 1,
     });
 
     expect(events).toEqual([
       "list:product-seeder/",
       "list:post-seeder/",
+      "delete:order/",
       "list:product/",
       "list:post/",
       "copy:product-seeder/->product/",

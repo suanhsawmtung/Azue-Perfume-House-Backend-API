@@ -72,6 +72,7 @@ describe("R2 storage provider", () => {
         accessKeyId: "access-key",
         secretAccessKey: "secret-key",
       },
+      maxAttempts: 2,
     });
     expect(commandInput.Bucket).toBe("azue-perfume-house");
     expect(commandInput.Key).toMatch(/^product\/[0-9]+-[0-9a-f-]+\.jpg$/);

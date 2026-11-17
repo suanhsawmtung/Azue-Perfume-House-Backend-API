@@ -1,4 +1,5 @@
 import { Request } from "express";
+import { env } from "../config/env";
 import { getFilePath, removeFile } from "./file";
 import { StorageService } from "../services/storage/storage.service";
 
@@ -34,13 +35,20 @@ export const cleanupUploadedFiles = async (req: Request) => {
     }
 
     if (fileInfo.provider !== "local" && fileInfo.identifier) {
-      try {
-        await new StorageService().deleteFile(
-          fileInfo.identifier,
-          fileInfo.category,
-        );
-      } catch (error) {
-        console.warn(error);
+      if (env.storageProvider === "r2") {
+        // Do not make error handling wait for an unavailable R2 endpoint.
+        void new StorageService()
+          .deleteFile(fileInfo.identifier, fileInfo.category)
+          .catch((error) => console.warn("R2 upload cleanup failed:", error));
+      } else {
+        try {
+          await new StorageService().deleteFile(
+            fileInfo.identifier,
+            fileInfo.category,
+          );
+        } catch (error) {
+          console.warn(error);
+        }
       }
     }
   }

@@ -41,4 +41,8 @@ export const createR2Client = (config: R2Config = getR2Config()): S3Client =>
       accessKeyId: config.accessKeyId,
       secretAccessKey: config.secretAccessKey,
     },
+    // R2 calls are made during HTTP requests. Keep a transient outage from
+    // holding an API request (or a database transaction) for the SDK default
+    // retry window, while still retrying one failed attempt.
+    maxAttempts: 2,
   });

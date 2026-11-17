@@ -1,11 +1,5 @@
 import { Concentration, Gender } from "@prisma/client";
 
-// const getSeedImagePath = (path: string) =>
-//   process.env.APP_ENV === "development" ? path.split("/").pop() ?? path : path;
-
-const getSeedImagePath = (path: string) =>
-  process.env.APP_ENV === "development" ? path : path;
-
 export const brands = [
   { name: "Versace", slug: "versace" },
   { name: "Jean Paul Gaultier", slug: "jean-paul-gaultier" },
@@ -29,7 +23,7 @@ export const categories = [
   { name: "History", slug: "history" },
 ];
 
-const productSeedData = [
+export const products = [
   {
     name: "Miss Dior",
     brandSlug: "dior",
@@ -781,18 +775,7 @@ const productSeedData = [
   },
 ];
 
-export const products = productSeedData.map((product) => ({
-  ...product,
-  variants: product.variants.map((variant) => ({
-    ...variant,
-    images: variant.images.map((image) => ({
-      ...image,
-      path: getSeedImagePath(image.path),
-    })),
-  })),
-}));
-
-const postSeedData = [
+export const posts = [
   {
     title: "The Art of Layering Fragrances: A Complete Guide",
     excerpt:
@@ -917,8 +900,3 @@ const postSeedData = [
       "A beautifully packaged perfume with a handwritten note shows extra thought and care.",
   },
 ];
-
-export const posts = postSeedData.map((post) => ({
-  ...post,
-  image: getSeedImagePath(post.image),
-}));
