@@ -73,13 +73,28 @@ jobs:
           [[ -d "$DO_BACKEND_PATH" ]] || { echo "Backend directory does not exist: $DO_BACKEND_PATH" >&2; exit 1; }
           cd "$DO_BACKEND_PATH"
           [[ -d .git ]] || { echo "Backend directory is not a Git repository: $DO_BACKEND_PATH" >&2; exit 1; }
+          export NVM_DIR="/home/deploy/.nvm"
+          if [[ ! -s "$NVM_DIR/nvm.sh" ]]; then
+            echo "NVM is not available at $NVM_DIR" >&2
+            exit 1
+          fi
+          # Load NVM for this non-interactive SSH session and select the verified runtime.
+          # This does not install or upgrade Node.js.
+          . "$NVM_DIR/nvm.sh"
+          nvm use v24.22.2 >/dev/null
+          export PATH="$NVM_DIR/versions/node/v24.22.2/bin:$PATH"
           command -v node >/dev/null 2>&1 || { echo "Node.js is not on PATH" >&2; exit 1; }
           node_version="$(node --version)"
-          [[ "$node_version" == v24.* ]] || { echo "Node.js 24 is required; found $node_version" >&2; exit 1; }
+          echo "Node.js version: $node_version"
+          [[ "$node_version" == v24.22.2 ]] || { echo "Node.js v24.22.2 is required; found $node_version" >&2; exit 1; }
           command -v pnpm >/dev/null 2>&1 || { echo "pnpm is not on PATH" >&2; exit 1; }
           pnpm_version="$(pnpm --version)"
+          echo "pnpm version: $pnpm_version"
           [[ "$pnpm_version" == 10.8.0 ]] || { echo "pnpm 10.8.0 is required; found $pnpm_version" >&2; exit 1; }
           command -v pm2 >/dev/null 2>&1 || { echo "PM2 is not on PATH" >&2; exit 1; }
+          pm2_version="$(pm2 --version)"
+          echo "PM2 version: $pm2_version"
+          [[ -n "$pm2_version" ]] || { echo "PM2 version could not be determined" >&2; exit 1; }
           current_branch="$(git branch --show-current)"
           [[ "$current_branch" == main ]] || git checkout main
           echo "Fetching origin/main..."
