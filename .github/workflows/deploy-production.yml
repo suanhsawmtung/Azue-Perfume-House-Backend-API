@@ -107,8 +107,12 @@ jobs:
           git merge --ff-only origin/main
           echo "Installing locked dependencies..."
           pnpm install --frozen-lockfile
+          echo "Generating Prisma Client..."
+          pnpm prisma generate
           echo "Building production bundle..."
           NODE_OPTIONS=--max-old-space-size=384 pnpm build
+          echo "Applying production database migrations..."
+          pnpm prisma migrate deploy
           echo "Restarting PM2 application: $PM2_APP_NAME"
           pm2 restart "$PM2_APP_NAME"
           echo "Verifying PM2 application status..."
