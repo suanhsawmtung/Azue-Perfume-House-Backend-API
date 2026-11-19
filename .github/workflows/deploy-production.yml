@@ -108,7 +108,7 @@ jobs:
           echo "Installing locked dependencies..."
           pnpm install --frozen-lockfile
           echo "Building production bundle..."
-          pnpm build
+          NODE_OPTIONS=--max-old-space-size=384 pnpm build
           echo "Restarting PM2 application: $PM2_APP_NAME"
           pm2 restart "$PM2_APP_NAME"
           echo "Verifying PM2 application status..."
