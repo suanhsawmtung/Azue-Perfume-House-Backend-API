@@ -18,7 +18,6 @@ import { recalculateUserPoints } from "../src/services/user/user.helpers";
 import { createSlug, ensureUniqueSlug } from "../src/utils/common";
 
 import redisClient, { connectRedis } from "../src/config/redis";
-import { getFilePath, removeFolder } from "../src/utils/file";
 import { brands, categories, posts, products } from "./data";
 
 export function createRandomUser() {
@@ -63,8 +62,6 @@ export async function main() {
   await prisma.category.deleteMany({});
   await prisma.brand.deleteMany({});
   console.log("Cleanup completed.");
-
-  removeFolder(getFilePath("uploads", "images"));
 
   // Seed Categories
   // console.log("Seeding Materials...");

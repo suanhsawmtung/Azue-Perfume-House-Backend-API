@@ -12,7 +12,7 @@ import {
   UpdateUserStatusParams,
 } from "../../types/user";
 import { createError } from "../../utils/common";
-import { getFilePath, removeFile } from "../../utils/file";
+import { deleteStoredFile } from "../storage/storage-reference";
 import {
   buildUserWhere,
   createUserRecord,
@@ -253,13 +253,7 @@ export class AdminUserService implements IAdminUserService {
     }
 
     if (existing.image) {
-      const imagePath = getFilePath(
-        "uploads",
-        "images",
-        "user",
-        existing.image,
-      );
-      removeFile(imagePath);
+      await deleteStoredFile(existing.image, existing.imagePublicId, "user");
     }
 
     await deleteUserRecord(existing.id);

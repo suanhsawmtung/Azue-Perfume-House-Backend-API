@@ -66,6 +66,7 @@ export const updateOrder = async (
 ) => {
   try {
     const { code } = req.params;
+    const storageFile = (req as any).storageFile;
 
     if (!code) {
       throw createError({
@@ -77,7 +78,7 @@ export const updateOrder = async (
 
     const result = await adminOrderService.updateOrder(code, {
       ...req.body,
-      image: req.file?.filename,
+      image: storageFile?.value || req.file?.filename,
     });
 
     return res.status(200).json(result);

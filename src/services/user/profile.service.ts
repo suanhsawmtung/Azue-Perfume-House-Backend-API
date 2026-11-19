@@ -12,7 +12,7 @@ import {
   UpdateMeParams,
 } from "../../types/user";
 import { createError } from "../../utils/common";
-import { getFilePath, removeFile } from "../../utils/file";
+import { deleteStoredFile } from "../storage/storage-reference";
 import {
   findUserById,
   findUserByIdWithSensitive,
@@ -176,7 +176,7 @@ export class ProfileService implements IProfileService {
     userId: number,
     params: UpdateMeParams,
   ): Promise<ServiceResponseT<SafeUserT>> {
-    const { firstName, lastName, phone, imageFilename } = params;
+    const { firstName, lastName, phone, imageFilename, imagePublicId } = params;
     const normalizedId = requireUserId(userId);
 
     const existing = await findUserById(normalizedId);
@@ -217,15 +217,10 @@ export class ProfileService implements IProfileService {
 
     if (imageFilename) {
       if (existing.image) {
-        const oldImagePath = getFilePath(
-          "uploads",
-          "images",
-          "user",
-          existing.image,
-        );
-        removeFile(oldImagePath);
+        await deleteStoredFile(existing.image, existing.imagePublicId, "user");
       }
       updateData.image = imageFilename;
+      updateData.imagePublicId = imagePublicId || null;
     }
 
     await updateUserRecord(existing.id, updateData);

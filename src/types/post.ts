@@ -59,6 +59,7 @@ export type CreatePostParams = {
   status?: PostStatus;
   categoryId: number | string;
   imageFilename?: string;
+  imagePublicId?: string | null;
   authenticatedUserId?: number;
 };
 
@@ -69,6 +70,7 @@ export type UpdatePostParams = {
   status?: PostStatus;
   categoryId: number | string;
   imageFilename?: string;
+  imagePublicId?: string | null;
   authenticatedUserId?: number;
 };
 

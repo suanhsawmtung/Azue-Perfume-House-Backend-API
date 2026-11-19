@@ -145,12 +145,12 @@ const productVariantValidation = [
   body("price")
     .notEmpty()
     .withMessage("Price is required.")
-    .isFloat({ min: 0 })
-    .withMessage("Price must be a positive number."),
+    .isFloat({ min: 0, max: 99999999.99 })
+    .withMessage("Price must be between 0 and 99,999,999.99."),
   body("discount")
     .optional()
-    .isFloat({ min: 0 })
-    .withMessage("Discount must be a positive number.")
+    .isFloat({ min: 0, max: 99999999.99 })
+    .withMessage("Discount must be between 0 and 99,999,999.99.")
     .custom((value, { req }) => {
       const price = parseFloat(req.body.price);
       if (value !== undefined && value > price) {
