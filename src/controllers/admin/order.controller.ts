@@ -19,6 +19,24 @@ export const listOrders = async (
   }
 };
 
+export const exportOrders = async (
+  req: CustomRequest,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const csv = await adminOrderService.exportOrders(req.query);
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader(
+      "Content-Disposition",
+      'attachment; filename="orders.csv"',
+    );
+    return res.status(200).send(csv);
+  } catch (error: any) {
+    next(error);
+  }
+};
+
 export const getOrder = async (
   req: CustomRequest,
   res: Response,

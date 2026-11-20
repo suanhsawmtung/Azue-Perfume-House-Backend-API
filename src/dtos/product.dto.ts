@@ -3,9 +3,25 @@ import {
   ProductCardT,
   ProductDetailQueryDataT,
   ProductDetailT,
+  ProductCsvQueryDataT,
+  ProductCsvRowT,
 } from "../types/product";
+import { csvValue, decimalValue } from "../services/order/order.helpers";
 
 export class ProductDto {
+  static toProductCsvRows(product: ProductCsvQueryDataT): ProductCsvRowT[] {
+    return product.variants.map((variant) => ({
+      product_name: csvValue(product.name),
+      brand_name: csvValue(product.brand.name),
+      variant_name: csvValue(`${product.name} - ${variant.size}ml`),
+      sku: csvValue(variant.sku),
+      price: decimalValue(variant.price),
+      stock_quantity: String(variant.stock),
+      product_status: product.isActive ? "active" : "inactive",
+      variant_status: variant.isActive ? "active" : "inactive",
+    }));
+  }
+
   static toProductCard(product: ProductCardQueryDataT): ProductCardT {
     const primaryVariant = product.variants[0];
 
