@@ -35,6 +35,7 @@ export class R2StorageProvider implements StorageProvider {
           Bucket: this.config.bucketName,
           Key: key,
           Body: file.buffer,
+          ContentLength: file.buffer.length,
           ContentType: file.mimeType,
         }),
       );
