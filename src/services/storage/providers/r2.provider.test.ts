@@ -62,6 +62,7 @@ describe("R2 storage provider", () => {
       Bucket: string;
       Key: string;
       Body: Buffer;
+      ContentLength: number;
       ContentType: string;
     };
 
@@ -72,11 +73,12 @@ describe("R2 storage provider", () => {
         accessKeyId: "access-key",
         secretAccessKey: "secret-key",
       },
-      maxAttempts: 2,
+      maxAttempts: 4,
     });
     expect(commandInput.Bucket).toBe("azue-perfume-house");
     expect(commandInput.Key).toMatch(/^product\/[0-9]+-[0-9a-f-]+\.jpg$/);
     expect(commandInput.Body).toEqual(Buffer.from("image"));
+    expect(commandInput.ContentLength).toBe(Buffer.byteLength("image"));
     expect(commandInput.ContentType).toBe("image/jpeg");
     expect(client.send).toHaveBeenCalledWith({ input: commandInput });
     expect(result).toEqual({
