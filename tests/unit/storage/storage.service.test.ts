@@ -2,14 +2,14 @@
 
 import fs from "fs/promises";
 import path from "path";
-import { env } from "../../config/env";
-import { CloudinaryStorageProvider } from "./providers/cloudinary.provider";
-import { LocalStorageProvider } from "./providers/local.provider";
-import { R2StorageProvider } from "./providers/r2.provider";
-import { createStorageProvider } from "./storage.factory";
-import { StorageService } from "./storage.service";
+import { env } from "../../../src/config/env";
+import { CloudinaryStorageProvider } from "../../../src/services/storage/providers/cloudinary.provider";
+import { LocalStorageProvider } from "../../../src/services/storage/providers/local.provider";
+import { R2StorageProvider } from "../../../src/services/storage/providers/r2.provider";
+import { createStorageProvider } from "../../../src/services/storage/storage.factory";
+import { StorageService } from "../../../src/services/storage/storage.service";
 
-jest.mock("./cloudinary.service", () => ({
+jest.mock("../../../src/services/storage/cloudinary.service", () => ({
   uploadImage: jest.fn(),
   deleteImage: jest.fn(),
 }));
@@ -24,7 +24,10 @@ jest.mock(
   { virtual: true },
 );
 
-import { deleteImage, uploadImage } from "./cloudinary.service";
+import {
+  deleteImage,
+  uploadImage,
+} from "../../../src/services/storage/cloudinary.service";
 
 describe("storage providers", () => {
   const originalEnv = process.env;
