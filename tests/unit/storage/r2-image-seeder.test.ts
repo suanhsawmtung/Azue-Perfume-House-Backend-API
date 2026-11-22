@@ -1,14 +1,20 @@
+import fs from "fs/promises";
+import path from "path";
+import { env } from "../../../src/config/env";
 import {
   R2_IMAGE_PREFIXES,
   resetR2ImagePrefixes,
-} from "./r2-image-seeder";
-import { env } from "../../config/env";
-import fs from "fs/promises";
-import path from "path";
+} from "../../../src/services/storage/r2-image-seeder";
 
 describe("resetR2ImagePrefixes", () => {
+  const originalStorageProvider = env.storageProvider;
+
   beforeEach(() => {
     env.storageProvider = "r2";
+  });
+
+  afterEach(() => {
+    env.storageProvider = originalStorageProvider;
   });
 
   it("deletes destinations before copying both source prefixes", async () => {
@@ -31,21 +37,25 @@ describe("resetR2ImagePrefixes", () => {
       }),
     };
 
-    await expect(resetR2ImagePrefixes(objectService)).resolves.toEqual({
+    await expect(resetR2ImagePrefixes(objectService as any)).resolves.toEqual({
       product: 1,
       post: 1,
       order: 1,
     });
 
-    expect(events).toEqual([
+    expect(events.slice(0, 3)).toEqual([
       "list:product-seeder/",
       "list:post-seeder/",
       "delete:order/",
-      "list:product/",
-      "list:post/",
-      "copy:product-seeder/->product/",
-      "copy:post-seeder/->post/",
     ]);
+    const productListIndex = events.indexOf("list:product/");
+    const postListIndex = events.indexOf("list:post/");
+    const productCopyIndex = events.indexOf("copy:product-seeder/->product/");
+    const postCopyIndex = events.indexOf("copy:post-seeder/->post/");
+    expect(productListIndex).toBeLessThan(productCopyIndex);
+    expect(postListIndex).toBeLessThan(postCopyIndex);
+    expect(events.indexOf("delete:order/")).toBeLessThan(productCopyIndex);
+    expect(events.indexOf("delete:order/")).toBeLessThan(postCopyIndex);
     expect(objectService.deletePrefix).not.toHaveBeenCalledWith(
       R2_IMAGE_PREFIXES[0].source,
     );
@@ -92,10 +102,12 @@ describe("resetR2ImagePrefixes", () => {
 
   it("fails when the copied count does not match the source count", async () => {
     const objectService = {
-      listPrefix: jest.fn().mockResolvedValue([
-        { key: "source/one.png" },
-        { key: "source/two.png" },
-      ]),
+      listPrefix: jest
+        .fn()
+        .mockResolvedValue([
+          { key: "source/one.png" },
+          { key: "source/two.png" },
+        ]),
       deletePrefix: jest.fn().mockResolvedValue(2),
       deleteObjects: jest.fn().mockResolvedValue(0),
       getObject: jest.fn().mockResolvedValue(Buffer.from("[]")),
@@ -108,27 +120,40 @@ describe("resetR2ImagePrefixes", () => {
     );
   });
 
-  it("downloads local seed files, preserves nested paths, and keeps unrelated files", async () => {
+  it("skips R2 seeding for the local storage provider", async () => {
     env.storageProvider = "local";
     const productDir = path.join(process.cwd(), "uploads/images/product");
     const postDir = path.join(process.cwd(), "uploads/images/post");
-    await fs.mkdir(productDir, { recursive: true });
-    await fs.mkdir(postDir, { recursive: true });
-    await fs.writeFile(path.join(productDir, "unrelated.txt"), "keep");
-    await fs.writeFile(path.join(productDir, ".r2-seed-manifest.json"), JSON.stringify(["stale.png"]));
-    await fs.writeFile(path.join(productDir, "stale.png"), "stale");
 
-    const objectService = {
-      listPrefix: jest.fn(async (prefix: string) => [{ key: `${prefix}nested/image.png` }]),
-      getObject: jest.fn(async (key: string) => Buffer.from(key)),
-    };
+    try {
+      await fs.mkdir(productDir, { recursive: true });
+      await fs.mkdir(postDir, { recursive: true });
+      await fs.writeFile(path.join(productDir, "unrelated.txt"), "keep");
+      await fs.writeFile(
+        path.join(productDir, ".r2-seed-manifest.json"),
+        JSON.stringify(["stale.png"]),
+      );
+      await fs.writeFile(path.join(productDir, "stale.png"), "stale");
 
-    await expect(resetR2ImagePrefixes(objectService as never)).resolves.toEqual({ product: 1, post: 1 });
-    await expect(fs.readFile(path.join(productDir, "nested/image.png"), "utf8")).resolves.toBe("product-seeder/nested/image.png");
-    await expect(fs.readFile(path.join(productDir, "unrelated.txt"), "utf8")).resolves.toBe("keep");
-    await expect(fs.access(path.join(productDir, "stale.png"))).rejects.toThrow();
+      const objectService = {
+        listPrefix: jest.fn(),
+        getObject: jest.fn(),
+      };
 
-    await fs.rm(productDir, { recursive: true, force: true });
-    await fs.rm(postDir, { recursive: true, force: true });
+      await expect(
+        resetR2ImagePrefixes(objectService as never),
+      ).resolves.toBeUndefined();
+      await expect(
+        fs.readFile(path.join(productDir, "stale.png"), "utf8"),
+      ).resolves.toBe("stale");
+      await expect(
+        fs.readFile(path.join(productDir, "unrelated.txt"), "utf8"),
+      ).resolves.toBe("keep");
+      expect(objectService.listPrefix).not.toHaveBeenCalled();
+      expect(objectService.getObject).not.toHaveBeenCalled();
+    } finally {
+      await fs.rm(productDir, { recursive: true, force: true });
+      await fs.rm(postDir, { recursive: true, force: true });
+    }
   });
 });

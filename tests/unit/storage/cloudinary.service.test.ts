@@ -1,8 +1,11 @@
 /// <reference types="jest" />
 
 import { v2 as cloudinary } from "cloudinary";
-import { cloudinaryFolders } from "../../config/cloudinary";
-import { deleteImage, uploadImage } from "./cloudinary.service";
+import { cloudinaryFolders } from "../../../src/config/cloudinary";
+import {
+  deleteImage,
+  uploadImage,
+} from "../../../src/services/storage/cloudinary.service";
 
 jest.mock("cloudinary", () => ({
   v2: {

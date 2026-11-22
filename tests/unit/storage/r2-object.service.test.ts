@@ -1,5 +1,5 @@
-import { R2Config } from "../../config/r2";
-import { R2ObjectService } from "./r2-object.service";
+import { R2Config } from "../../../src/config/r2";
+import { R2ObjectService } from "../../../src/services/storage/r2-object.service";
 
 jest.mock("@aws-sdk/client-s3", () => ({
   CopyObjectCommand: jest.fn().mockImplementation((input) => ({ input })),

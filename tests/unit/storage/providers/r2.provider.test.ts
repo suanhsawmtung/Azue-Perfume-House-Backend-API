@@ -5,7 +5,8 @@ import {
   PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
-import { R2StorageProvider } from "./r2.provider";
+import { env } from "../../../../src/config/env";
+import { R2StorageProvider } from "../../../../src/services/storage/providers/r2.provider";
 
 jest.mock("@aws-sdk/client-s3", () => ({
   S3Client: jest.fn().mockImplementation(() => ({ send: jest.fn() })),
@@ -29,6 +30,8 @@ const validR2Env = {
   R2_PUBLIC_URL: "https://cdn.example.com///",
 };
 
+const originalR2Config = { ...env.r2 };
+
 const getClient = () =>
   mockedS3Client.mock.results[0]?.value as { send: jest.Mock };
 
@@ -37,11 +40,19 @@ describe("R2 storage provider", () => {
 
   beforeEach(() => {
     process.env = { ...originalEnv, ...validR2Env };
+    env.r2 = {
+      accountId: validR2Env.R2_ACCOUNT_ID,
+      accessKeyId: validR2Env.R2_ACCESS_KEY_ID,
+      secretAccessKey: validR2Env.R2_SECRET_ACCESS_KEY,
+      bucketName: validR2Env.R2_BUCKET_NAME,
+      publicUrl: validR2Env.R2_PUBLIC_URL,
+    };
     jest.clearAllMocks();
   });
 
   afterAll(() => {
     process.env = originalEnv;
+    env.r2 = originalR2Config;
   });
 
   test("uploads a buffer with the correct bucket, key, and content type", async () => {
@@ -106,10 +117,10 @@ describe("R2 storage provider", () => {
   });
 
   test("rejects missing R2 configuration", () => {
-    delete process.env.R2_SECRET_ACCESS_KEY;
+    env.r2.secretAccessKey = "";
 
     expect(() => new R2StorageProvider()).toThrow(
-      "R2 configuration is missing. Set R2_SECRET_ACCESS_KEY.",
+      /R2 configuration is missing[\s\S]*R2_SECRET_ACCESS_KEY/,
     );
   });
 
