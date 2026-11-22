@@ -6,7 +6,9 @@ import {
   OrderStatus,
   ReservationStatus,
 } from "@prisma/client";
+import { stringify } from "csv-stringify/sync";
 import { errorCode } from "../../config/error-code";
+import { OrderDto } from "../../dtos/order.dto";
 import { prisma } from "../../lib/prisma";
 import { ServiceResponseT } from "../../types/common";
 import {
@@ -117,6 +119,78 @@ export class AdminOrderService implements IAdminOrderService {
       },
       message: null,
     };
+  }
+
+  async exportOrders(
+    params: ListAdminOrdersParams,
+  ): Promise<string> {
+    const { search, status, paymentStatus, source, userId, condition } =
+      parseOrderQueryParams(params);
+
+    const where = buildOrderWhereClause({
+      ...(search && { search }),
+      ...(status && { status }),
+      ...(paymentStatus && { paymentStatus }),
+      ...(source && { source }),
+      ...(userId && { userId }),
+      ...(condition && { condition }),
+    });
+
+    const items = await prisma.order.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      include: {
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            username: true,
+            phone: true,
+            email: true,
+          },
+        },
+        orderItems: {
+          include: {
+            productVariant: {
+              include: {
+                product: {
+                  select: {
+                    id: true,
+                    name: true,
+                    slug: true,
+                    brand: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const enrichedItems = (await enrichOrders(items)) as ListOrderT[];
+
+    return stringify(
+      enrichedItems.map((order) => OrderDto.toOrderCsvRow(order)),
+      {
+        header: true,
+        columns: [
+          "order_code",
+          "created_at",
+          "customer_name",
+          "customer_phone",
+          "customer_email",
+          "customer_address",
+          "customer_notes",
+          "order_status",
+          "payment_status",
+          "source",
+          "total_price",
+          "order_items",
+        ],
+      },
+    );
   }
 
   async getOrderDetail(code: string): Promise<ServiceResponseT<ListOrderT>> {

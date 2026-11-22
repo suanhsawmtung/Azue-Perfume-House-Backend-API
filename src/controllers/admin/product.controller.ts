@@ -1,16 +1,35 @@
 import { NextFunction, Response } from "express";
 import { errorCode } from "../../config/error-code";
 import { AdminProductService } from "../../services/product/admin.service";
+import { findProductBySlug } from "../../services/product/product.helpers";
 import { CustomRequest } from "../../types/common";
 import { createError } from "../../utils/common";
 import { cleanupUploadedFiles } from "../../utils/file-cleanup";
 
 const adminProductService = new AdminProductService();
 
+export const exportProducts = async (
+  req: CustomRequest,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const csv = await adminProductService.exportProducts(req.query);
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader(
+      "Content-Disposition",
+      'attachment; filename="products.csv"',
+    );
+    return res.status(200).send(csv);
+  } catch (error: any) {
+    next(error);
+  }
+};
+
 export const listProducts = async (
   req: CustomRequest,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const result = await adminProductService.listProducts(req.query);
@@ -23,7 +42,7 @@ export const listProducts = async (
 export const getProduct = async (
   req: CustomRequest,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const { slug } = req.params;
@@ -46,7 +65,7 @@ export const getProduct = async (
 export const listProductVariants = async (
   req: CustomRequest,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const { slug } = req.params;
@@ -69,7 +88,7 @@ export const listProductVariants = async (
 export const getProductVariant = async (
   req: CustomRequest,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const { variantSlug } = req.params;
@@ -92,7 +111,7 @@ export const getProductVariant = async (
 export const createProduct = async (
   req: CustomRequest,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const result = await adminProductService.createProduct(req.body);
@@ -105,7 +124,7 @@ export const createProduct = async (
 export const updateProduct = async (
   req: CustomRequest,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const { slug } = req.params;
@@ -128,7 +147,7 @@ export const updateProduct = async (
 export const deleteProduct = async (
   req: CustomRequest,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const { slug } = req.params;
@@ -151,16 +170,44 @@ export const deleteProduct = async (
 export const createProductVariant = async (
   req: CustomRequest,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const files = (req as any).files as Express.Multer.File[] | undefined;
+    const storageFiles = (req as any).storageFiles || [];
     const imageFilenames =
-      files && Array.isArray(files) ? files.map((file) => file.filename) : [];
+      storageFiles.length > 0
+        ? storageFiles.map((file: any) => file.value)
+        : files && Array.isArray(files)
+          ? files.map((file) => file.filename)
+          : [];
+    const imagePublicIds = storageFiles.map((file: any) => file.publicId);
+
+    const { slug } = req.params;
+
+    if (!slug) {
+      throw createError({
+        message: "Slug parameter is required.",
+        status: 400,
+        code: errorCode.invalid,
+      });
+    }
+
+    const product = await findProductBySlug(slug);
+
+    if (!product) {
+      throw createError({
+        message: `Product with slug "${slug}" not found.`,
+        status: 404,
+        code: errorCode.notFound,
+      });
+    }
 
     const result = await adminProductService.createVariant({
       ...req.body,
       ...(imageFilenames.length > 0 && { imageFilenames }),
+      ...(imageFilenames.length > 0 && { imagePublicIds }),
+      productId: product.id,
     });
 
     return res.status(201).json(result);
@@ -173,7 +220,7 @@ export const createProductVariant = async (
 export const updateProductVariant = async (
   req: CustomRequest,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const { variantSlug } = req.params;
@@ -187,12 +234,19 @@ export const updateProductVariant = async (
     }
 
     const files = (req as any).files as Express.Multer.File[] | undefined;
+    const storageFiles = (req as any).storageFiles || [];
     const imageFilenames =
-      files && Array.isArray(files) ? files.map((file) => file.filename) : [];
+      storageFiles.length > 0
+        ? storageFiles.map((file: any) => file.value)
+        : files && Array.isArray(files)
+          ? files.map((file) => file.filename)
+          : [];
+    const imagePublicIds = storageFiles.map((file: any) => file.publicId);
 
     const result = await adminProductService.updateVariant(variantSlug, {
       ...req.body,
       ...(imageFilenames.length > 0 && { imageFilenames }),
+      ...(imageFilenames.length > 0 && { imagePublicIds }),
     });
 
     return res.status(200).json(result);
@@ -205,7 +259,7 @@ export const updateProductVariant = async (
 export const deleteProductVariant = async (
   req: CustomRequest,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const { variantSlug } = req.params;

@@ -34,6 +34,25 @@ export type AdminListProductResultT = {
   pageSize: number;
 };
 
+export type ProductCsvQueryDataT = Product & {
+  brand: Pick<Brand, "name">;
+  variants: Pick<
+    ProductVariant,
+    "size" | "sku" | "price" | "stock" | "isActive"
+  >[];
+};
+
+export type ProductCsvRowT = {
+  product_name: string;
+  brand_name: string;
+  variant_name: string;
+  sku: string;
+  price: string;
+  stock_quantity: string;
+  product_status: string;
+  variant_status: string;
+};
+
 export type ListProductT = ProductCardT;
 
 export type ListProductResultT = {
@@ -178,6 +197,7 @@ export type CreateProductVariantParams = {
   price: number | string;
   discount?: number | string;
   imageFilenames?: string[];
+  imagePublicIds?: (string | null)[];
   isPrimary?: boolean;
   isActive?: boolean;
 };
@@ -188,6 +208,7 @@ export type UpdateProductVariantParams = {
   price: number | string;
   discount?: number | string;
   imageFilenames?: string[];
+  imagePublicIds?: (string | null)[];
   existingImages?: string[];
   imageLayout?: string[];
   isPrimary?: boolean;

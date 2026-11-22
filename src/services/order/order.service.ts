@@ -205,6 +205,7 @@ export class OrderService implements IOrderService {
       customerNotes,
       items,
       imageFilename,
+      imagePublicId,
       userId,
     } = params;
 
@@ -283,7 +284,8 @@ export class OrderService implements IOrderService {
           customerPhone: customerPhone ? customerPhone.trim() : null,
           customerAddress: customerAddress ? customerAddress.trim() : null,
           customerNotes: customerNotes ? customerNotes.trim() : null,
-          image: imageFilename,
+          image: imageFilename || null,
+          imagePublicId: imagePublicId || null,
           orderItems: {
             create: verifiedItems.map((item) => ({
               productVariantId: item.itemId,

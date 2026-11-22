@@ -19,6 +19,24 @@ export const listOrders = async (
   }
 };
 
+export const exportOrders = async (
+  req: CustomRequest,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const csv = await adminOrderService.exportOrders(req.query);
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader(
+      "Content-Disposition",
+      'attachment; filename="orders.csv"',
+    );
+    return res.status(200).send(csv);
+  } catch (error: any) {
+    next(error);
+  }
+};
+
 export const getOrder = async (
   req: CustomRequest,
   res: Response,
@@ -66,6 +84,7 @@ export const updateOrder = async (
 ) => {
   try {
     const { code } = req.params;
+    const storageFile = (req as any).storageFile;
 
     if (!code) {
       throw createError({
@@ -77,7 +96,7 @@ export const updateOrder = async (
 
     const result = await adminOrderService.updateOrder(code, {
       ...req.body,
-      image: req.file?.filename,
+      image: storageFile?.value || req.file?.filename,
     });
 
     return res.status(200).json(result);

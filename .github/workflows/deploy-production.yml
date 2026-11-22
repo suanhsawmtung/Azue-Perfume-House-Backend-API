@@ -1,0 +1,141 @@
+name: Deploy production
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: production-deployment
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy to DigitalOcean
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Validate deployment secrets
+        shell: bash
+        env:
+          DO_HOST: ${{ secrets.DO_HOST }}
+          DO_USERNAME: ${{ secrets.DO_USERNAME }}
+          DO_SSH_PRIVATE_KEY: ${{ secrets.DO_SSH_PRIVATE_KEY }}
+          DO_SSH_PORT: ${{ secrets.DO_SSH_PORT }}
+          DO_BACKEND_PATH: ${{ secrets.DO_BACKEND_PATH }}
+          DO_KNOWN_HOSTS: ${{ secrets.DO_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          for required_value in DO_HOST DO_USERNAME DO_SSH_PRIVATE_KEY DO_SSH_PORT DO_BACKEND_PATH DO_KNOWN_HOSTS; do
+            if [[ -z "${!required_value}" ]]; then
+              echo "Required secret is missing: ${required_value}" >&2
+              exit 1
+            fi
+          done
+          if ! [[ "$DO_SSH_PORT" =~ ^[0-9]+$ ]] || (( DO_SSH_PORT < 1 || DO_SSH_PORT > 65535 )); then
+            echo "DO_SSH_PORT must be a valid TCP port number" >&2
+            exit 1
+          fi
+
+      - name: Configure SSH
+        shell: bash
+        env:
+          DO_SSH_PRIVATE_KEY: ${{ secrets.DO_SSH_PRIVATE_KEY }}
+          DO_KNOWN_HOSTS: ${{ secrets.DO_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          ssh_directory="$(mktemp -d)"
+          chmod 700 "$ssh_directory"
+          echo "SSH_DIR=$ssh_directory" >> "$GITHUB_ENV"
+          printf '%s\n' "$DO_SSH_PRIVATE_KEY" > "$ssh_directory/id_deploy"
+          chmod 600 "$ssh_directory/id_deploy"
+          printf '%s\n' "$DO_KNOWN_HOSTS" > "$ssh_directory/known_hosts"
+          chmod 600 "$ssh_directory/known_hosts"
+
+      - name: Deploy and verify
+        shell: bash
+        env:
+          DO_HOST: ${{ secrets.DO_HOST }}
+          DO_USERNAME: ${{ secrets.DO_USERNAME }}
+          DO_SSH_PORT: ${{ secrets.DO_SSH_PORT }}
+          DO_BACKEND_PATH: ${{ secrets.DO_BACKEND_PATH }}
+          PM2_APP_NAME: azue-perfume-house-api
+        run: |
+          set -euo pipefail
+          ssh -i "$SSH_DIR/id_deploy" -p "$DO_SSH_PORT" \
+            -o BatchMode=yes -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$SSH_DIR/known_hosts" \
+            "$DO_USERNAME@$DO_HOST" \
+            "DO_BACKEND_PATH=$(printf '%q' "$DO_BACKEND_PATH") PM2_APP_NAME=$(printf '%q' "$PM2_APP_NAME") bash -s" <<'REMOTE_SCRIPT'
+          set -euo pipefail
+          echo "Checking production deployment prerequisites..."
+          [[ -d "$DO_BACKEND_PATH" ]] || { echo "Backend directory does not exist: $DO_BACKEND_PATH" >&2; exit 1; }
+          cd "$DO_BACKEND_PATH"
+          [[ -d .git ]] || { echo "Backend directory is not a Git repository: $DO_BACKEND_PATH" >&2; exit 1; }
+          export NVM_DIR="/home/deploy/.nvm"
+          if [[ ! -s "$NVM_DIR/nvm.sh" ]]; then
+            echo "NVM is not available at $NVM_DIR" >&2
+            exit 1
+          fi
+          # Load NVM for this non-interactive SSH session and select the verified runtime.
+          # This does not install or upgrade Node.js.
+          . "$NVM_DIR/nvm.sh"
+          nvm use v24.22.2 >/dev/null
+          export PATH="$NVM_DIR/versions/node/v24.22.2/bin:$PATH"
+          command -v node >/dev/null 2>&1 || { echo "Node.js is not on PATH" >&2; exit 1; }
+          node_version="$(node --version)"
+          echo "Node.js version: $node_version"
+          [[ "$node_version" == v24.22.2 ]] || { echo "Node.js v24.22.2 is required; found $node_version" >&2; exit 1; }
+          command -v pnpm >/dev/null 2>&1 || { echo "pnpm is not on PATH" >&2; exit 1; }
+          pnpm_version="$(pnpm --version)"
+          echo "pnpm version: $pnpm_version"
+          [[ "$pnpm_version" == 10.8.0 ]] || { echo "pnpm 10.8.0 is required; found $pnpm_version" >&2; exit 1; }
+          command -v pm2 >/dev/null 2>&1 || { echo "PM2 is not on PATH" >&2; exit 1; }
+          pm2_version="$(pm2 --version)"
+          echo "PM2 version: $pm2_version"
+          [[ -n "$pm2_version" ]] || { echo "PM2 version could not be determined" >&2; exit 1; }
+          current_branch="$(git branch --show-current)"
+          [[ "$current_branch" == main ]] || git checkout main
+          echo "Fetching origin/main..."
+          git fetch --prune origin main
+          if ! git merge-base --is-ancestor HEAD origin/main; then
+            echo "The server checkout is ahead of or diverged from origin/main; refusing deployment" >&2
+            exit 1
+          fi
+          echo "Fast-forwarding local main to origin/main..."
+          git merge --ff-only origin/main
+          echo "Installing locked dependencies..."
+          pnpm install --frozen-lockfile
+          echo "Generating Prisma Client..."
+          pnpm prisma generate
+          echo "Building production bundle..."
+          NODE_OPTIONS=--max-old-space-size=384 pnpm build
+          echo "Applying production database migrations..."
+          pnpm prisma migrate deploy
+          echo "Restarting PM2 application: $PM2_APP_NAME"
+          pm2 restart "$PM2_APP_NAME"
+          echo "Verifying PM2 application status..."
+          pm2 jlist | node -e '
+            let input = "";
+            process.stdin.on("data", (chunk) => { input += chunk; });
+            process.stdin.on("end", () => {
+              const processes = JSON.parse(input);
+              const app = processes.find((pm2Process) => pm2Process.name === process.env.PM2_APP_NAME);
+              if (!app || app.pm2_env?.status !== "online") {
+                console.error(`PM2 process is not online: ${process.env.PM2_APP_NAME}`);
+                process.exit(1);
+              }
+              console.log(`PM2 process is online: ${process.env.PM2_APP_NAME}`);
+            });
+          '
+          REMOTE_SCRIPT
+
+      - name: Clean up SSH material
+        if: ${{ always() }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -n "${SSH_DIR:-}" && "$SSH_DIR" == "$RUNNER_TEMP"/* && -d "$SSH_DIR" ]]; then
+            rm -rf -- "$SSH_DIR"
+          fi

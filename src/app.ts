@@ -111,7 +111,7 @@ const errorHandler: ErrorRequestHandler = async (
 
   console.log(error);
 
-  const status = error.status;
+  const status = Number.isInteger(error?.status) ? error.status : 500;
   const message = error.message ?? "Server Error";
   const errorCode = error.code ?? "Error_Code";
 

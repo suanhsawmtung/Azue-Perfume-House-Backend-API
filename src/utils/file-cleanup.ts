@@ -1,21 +1,25 @@
 import { Request } from "express";
+import { env } from "../config/env";
 import { getFilePath, removeFile } from "./file";
+import { StorageService } from "../services/storage/storage.service";
 
 export interface UploadedFileInfo {
-  filename: string;
-  subDir: string; // "post", "product", or "" for profile
+  identifier: string;
+  category: "post" | "product" | "user" | "order";
+  provider: string;
+  localPath?: string;
 }
 
 // Track uploaded file in request
 export const trackUploadedFile = (
   req: Request,
-  filename: string,
-  subDir: string = ""
-) => {
+  fileInfo: UploadedFileInfo,
+): UploadedFileInfo => {
   if (!(req as any).uploadedFiles) {
     (req as any).uploadedFiles = [];
   }
-  (req as any).uploadedFiles.push({ filename, subDir });
+  (req as any).uploadedFiles.push(fileInfo);
+  return fileInfo;
 };
 
 // Clean up all tracked uploaded files
@@ -26,13 +30,27 @@ export const cleanupUploadedFiles = async (req: Request) => {
   }
 
   for (const fileInfo of uploadedFiles) {
-    const filePath = getFilePath(
-      "uploads",
-      "images",
-      fileInfo.subDir,
-      fileInfo.filename
-    );
-    await removeFile(filePath);
+    if (fileInfo.localPath) {
+      await removeFile(fileInfo.localPath);
+    }
+
+    if (fileInfo.provider !== "local" && fileInfo.identifier) {
+      if (env.storageProvider === "r2") {
+        // Do not make error handling wait for an unavailable R2 endpoint.
+        void new StorageService()
+          .deleteFile(fileInfo.identifier, fileInfo.category)
+          .catch((error) => console.warn("R2 upload cleanup failed:", error));
+      } else {
+        try {
+          await new StorageService().deleteFile(
+            fileInfo.identifier,
+            fileInfo.category,
+          );
+        } catch (error) {
+          console.warn(error);
+        }
+      }
+    }
   }
 
   // Clear the tracked files
