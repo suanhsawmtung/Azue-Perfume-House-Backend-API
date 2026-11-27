@@ -1,13 +1,7 @@
 import compression from "compression";
 import cookieParser from "cookie-parser";
 import cors from "cors";
-import express, {
-  ErrorRequestHandler,
-  Express,
-  NextFunction,
-  Request,
-  Response,
-} from "express";
+import express, { Express } from "express";
 import helmet from "helmet";
 import morgan from "morgan";
 
@@ -18,8 +12,8 @@ import passport from "./config/passport";
 import { swaggerSpec } from "./docs/swagger";
 import { startCronJobs } from "./jobs";
 import { isMaintenanceMode } from "./middlewares/ensure-not-in-maintenance";
+import { errorHandler } from "./middlewares/global-error-handler";
 import routes from "./routes";
-import { cleanupUploadedFiles } from "./utils/file-cleanup";
 
 const whitelist = env.corsOrigins;
 const corsOptions = {
@@ -99,24 +93,6 @@ app.use(
 app.use("/user", express.static(path.resolve("uploads/images/user")));
 
 app.use(isMaintenanceMode).use(routes);
-
-const errorHandler: ErrorRequestHandler = async (
-  error: any,
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => {
-  // Clean up uploaded files if any error occurs
-  await cleanupUploadedFiles(req as any);
-
-  console.log(error);
-
-  const status = Number.isInteger(error?.status) ? error.status : 500;
-  const message = error.message ?? "Server Error";
-  const errorCode = error.code ?? "Error_Code";
-
-  res.status(status).json({ message, error: errorCode });
-};
 
 app.use(errorHandler);
 
